@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BNSB Lab | IIT Hyderabad | Dr. Abhishek Subramanian</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white:#fff;--bg:#f8f6f1;--bg-card:#fff;--bg-section:#f2efe8;
+  --g900:#173404;--g800:#27500a;--g700:#3b6d11;--g600:#639922;--g400:#97c459;--g200:#c0dd97;--g100:#ddedb5;--g50:#eaf3de;
+  --a900:#412402;--a800:#633806;--a700:#854f0b;--a600:#ba7517;--a400:#ef9f27;--a200:#fac775;--a100:#fde3ac;--a50:#faeeda;
+  --t1:#1e2a14;--t2:#4a5c30;--tm:#7a8c65;--tl:#a8b890;
+  --bdr:rgba(60,80,30,0.12);--bdrm:rgba(60,80,30,0.2);
+  --nav-h:70px;--fd:'Playfair Display',Georgia,serif;--fb:'Plus Jakarta Sans',sans-serif;--fm:'JetBrains Mono',monospace;
+  --r:10px;--rl:16px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--fb);line-height:1.7;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--g400);border-radius:4px}
+#bioCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.3;pointer-events:none}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);display:flex;align-items:center;padding:0 5%;background:rgba(248,246,241,0.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--bdr);z-index:1000;justify-content:space-between;transition:box-shadow 0.3s}
+nav.scrolled{box-shadow:0 2px 24px rgba(60,80,30,0.1)}
+.nav-brand{display:flex;align-items:center;gap:13px;text-decoration:none}
+.nav-logo{width:44px;height:44px;border-radius:9px;background:var(--g800);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:11px;font-weight:500;color:var(--g50);letter-spacing:-0.5px;flex-shrink:0}
+.nav-title strong{font-family:var(--fd);font-size:17px;font-weight:700;color:var(--t1);display:block}
+.nav-title span{font-size:9.5px;color:var(--tm);letter-spacing:2px;text-transform:uppercase}
+.nav-links{display:flex;gap:28px;list-style:none;align-items:center}
+.nav-links a{text-decoration:none;font-size:13px;font-weight:500;color:var(--t2);transition:color 0.2s;position:relative;padding-bottom:2px}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--g600);transition:width 0.25s}
+.nav-links a:hover{color:var(--g800)}.nav-links a:hover::after{width:100%}
+.btn-join{background:var(--g800)!important;color:var(--g50)!important;padding:8px 20px!important;border-radius:100px;font-weight:600!important;font-size:12px!important}
+.btn-join::after{display:none!important}.btn-join:hover{background:var(--g900)!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none}
+.hamburger span{width:22px;height:2px;background:var(--t1);border-radius:2px;transition:all 0.3s}
+.mobile-menu{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(248,246,241,0.98);backdrop-filter:blur(18px);border-bottom:1px solid var(--bdr);padding:20px 5%;z-index:999;flex-direction:column;gap:12px}
+.mobile-menu a{text-decoration:none;font-size:15px;font-weight:500;color:var(--t2);padding:8px 0;border-bottom:1px solid var(--bdr)}
+.mobile-menu a:last-child{border-bottom:none}
+.mobile-menu.open{display:flex}
+
+/* HERO */
+#hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;padding:calc(var(--nav-h) + 70px) 5% 80px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;width:100%;align-items:center}
+.hero-left{display:flex;flex-direction:column;gap:26px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--fm);font-size:11px;letter-spacing:1.5px;color:var(--g800);text-transform:uppercase;padding:6px 16px;border:1px solid var(--bdrm);border-radius:100px;background:var(--g50);width:fit-content}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g600);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(1.5)}}
+h1.hero-h1{font-family:var(--fd);font-size:clamp(38px,5vw,68px);font-weight:700;line-height:1.1;color:var(--t1)}
+h1.hero-h1 em{font-style:italic;color:var(--g700)}
+.hero-sub{font-size:15.5px;color:var(--t2);max-width:460px;line-height:1.85}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.btn-primary{background:var(--g800);color:var(--g50);padding:13px 28px;border-radius:var(--r);font-weight:600;font-size:14px;text-decoration:none;transition:background 0.2s,transform 0.2s;box-shadow:0 4px 20px rgba(39,80,10,0.22)}
+.btn-primary:hover{background:var(--g900);transform:translateY(-2px)}
+.btn-outline{border:1.5px solid var(--bdrm);color:var(--t2);padding:12px 24px;border-radius:var(--r);font-weight:500;font-size:14px;text-decoration:none;transition:all 0.2s;background:var(--white)}
+.btn-outline:hover{border-color:var(--g600);color:var(--g800);background:var(--g50)}
+.hero-stats{display:flex;gap:32px;margin-top:8px}
+.stat{display:flex;flex-direction:column}
+.stat-num{font-family:var(--fd);font-size:32px;font-weight:700;color:var(--a600);line-height:1}
+.stat-lbl{font-size:11.5px;color:var(--tm);margin-top:4px}
+.hero-right{display:flex;align-items:center;justify-content:center}
+.hero-panel{width:100%;max-width:460px;aspect-ratio:1;position:relative;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(97,196,34,0.07) 0%,transparent 65%);border:1px solid var(--bdr)}
+.hero-panel svg{width:86%;height:86%}
+.ring{position:absolute;border-radius:50%;border:1px solid;animation:spin linear infinite;transform-origin:center}
+.ring-1{width:100%;height:100%;border-color:rgba(99,153,34,0.12);animation-duration:40s}
+.ring-2{width:78%;height:78%;border-color:rgba(186,117,23,0.1);animation-duration:25s;animation-direction:reverse}
+.ring-3{width:56%;height:56%;border-color:rgba(99,153,34,0.1);animation-duration:18s}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MARQUEE */
+.marquee-wrap{position:relative;z-index:1;overflow:hidden;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:13px 0;background:var(--white)}
+.marquee-track{display:flex;gap:48px;white-space:nowrap;animation:marquee 35s linear infinite}
+.marquee-track span{font-family:var(--fm);font-size:11px;color:var(--tm);letter-spacing:0.5px}
+.marquee-track .adot{color:var(--a600)}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* SECTION */
+section{position:relative;z-index:1;padding:88px 5%}
+.slabel{font-family:var(--fm);font-size:11px;color:var(--g700);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.slabel::before{content:'';width:18px;height:1.5px;background:var(--g600)}
+.stitle{font-family:var(--fd);font-size:clamp(28px,3.5vw,48px);font-weight:700;line-height:1.15;color:var(--t1);margin-bottom:14px}
+.stitle em{font-style:italic;color:var(--g700)}
+.ssub{font-size:15px;color:var(--t2);max-width:600px;line-height:1.85}
+.shead{margin-bottom:52px}
+.divider{width:100%;height:1px;background:var(--bdr);position:relative;z-index:1}
+
+/* ABOUT */
+#about{background:var(--white)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.pi-photo-wrap{position:relative}
+.pi-photo{width:100%;aspect-ratio:3/4;border-radius:var(--rl);object-fit:cover;object-position:top center;border:1px solid var(--bdr)}
+.pi-photo-placeholder{width:100%;aspect-ratio:3/4;border-radius:var(--rl);background:var(--g50);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;color:var(--tm);font-size:13px}
+.pi-badge{position:absolute;bottom:-16px;right:-16px;padding:14px 18px;border-radius:var(--r);background:var(--a50);border:1px solid rgba(186,117,23,0.2)}
+.pi-badge .big{font-family:var(--fd);font-size:26px;font-weight:700;color:var(--a700);line-height:1}
+.pi-badge .sm{font-size:10.5px;color:var(--a700);margin-top:2px;opacity:0.75}
+.about-text p{color:var(--t2);font-size:14.5px;line-height:1.85;margin-bottom:14px}
+.pi-info-card{padding:20px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--g50);margin-top:24px}
+.pi-name{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--t1)}
+.pi-role{font-size:12px;color:var(--tm);margin:3px 0 8px;letter-spacing:0.3px}
+.pi-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.pi-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--g700);text-decoration:none;padding:5px 12px;border-radius:100px;border:1px solid var(--bdr);background:var(--white);font-weight:500;transition:all 0.2s}
+.pi-link:hover{background:var(--g50);border-color:var(--g600)}
+
+/* RESEARCH */
+#research{background:var(--bg)}
+.research-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rcard{padding:26px;border-radius:var(--rl);border:1px solid var(--bdr);background:var(--white);transition:transform 0.28s,box-shadow 0.28s,border-color 0.28s;position:relative;overflow:hidden}
+.rcard::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--g600),var(--a400));transform:scaleX(0);transform-origin:left;transition:transform 0.28s}
+.rcard:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(40,70,10,0.1);border-color:var(--bdrm)}.rcard:hover::after{transform:scaleX(1)}
+.ricon{width:46px;height:46px;border-radius:10px;margin-bottom:16px;background:var(--g50);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center}
+.ricon svg{width:22px;height:22px}
+.rcard h3{font-family:var(--fd);font-size:19px;font-weight:700;color:var(--t1);margin-bottom:9px}
+.rcard p{font-size:13px;color:var(--t2);line-height:1.75}
+.rtag{display:inline-block;margin-top:14px;font-family:var(--fm);font-size:9.5px;letter-spacing:1px;color:var(--g700);text-transform:uppercase}
+
+/* TEAM */
+#team{background:var(--white)}
+.team-section-label{font-family:var(--fm);font-size:11px;color:var(--a700);letter-spacing:2px;text-transform:uppercase;margin:32px 0 16px;padding:8px 0;border-bottom:1.5px solid var(--a200);display:flex;align-items:center;gap:8px}
+.team-section-label::before{content:'';width:14px;height:1.5px;background:var(--a600)}
+.team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.tcard{border-radius:var(--rl);border:1px solid var(--bdr);background:var(--bg);overflow:hidden;transition:transform 0.28s,box-shadow 0.28s}
+.tcard:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(40,70,10,0.09)}
+.tphoto{width:100%;aspect-ratio:1;overflow:hidden;border-bottom:1px solid var(--bdr)}
+.tphoto img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform 0.4s}
+.tcard:hover .tphoto img{transform:scale(1.04)}
+.tphoto-placeholder{width:100%;height:100%;background:var(--g50);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--tm);font-size:11px}
+.tphoto-placeholder svg{width:40px;height:40px;opacity:0.18}
+.tinfo{padding:16px}
+.tname{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--t1)}
+.trole{font-size:10px;color:var(--g700);letter-spacing:1px;text-transform:uppercase;margin:3px 0 6px;font-family:var(--fm)}
+.tdesc{font-size:12px;color:var(--tm);line-height:1.6}
+.intern-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.intern-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;border:1px solid var(--bdr);background:var(--white);font-size:12.5px;color:var(--t2)}
+.intern-chip span{font-size:10px;color:var(--tm)}
+
+/* PUBLICATIONS */
+#publications{background:var(--bg-section)}
+.pub-filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.pfbtn{padding:7px 18px;border-radius:100px;border:1px solid var(--bdr);background:var(--white);font-size:12.5px;color:var(--t2);cursor:pointer;transition:all 0.2s;font-family:var(--fb)}
+.pfbtn.active,.pfbtn:hover{background:var(--g800);color:var(--g50);border-color:var(--g800)}
+.pub-list{display:flex;flex-direction:column;gap:12px}
+.pitem{padding:20px 24px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--white);display:flex;gap:16px;align-items:flex-start;transition:border-color 0.2s,box-shadow 0.2s}
+.pitem:hover{border-color:var(--bdrm);box-shadow:0 4px 18px rgba(40,70,10,0.07)}
+.pyear{flex-shrink:0;font-family:var(--fm);font-size:12px;color:var(--a700);background:var(--a50);padding:3px 11px;border-radius:100px;border:1px solid rgba(186,117,23,0.18);height:fit-content;white-space:nowrap}
+.ptitle{font-family:var(--fd);font-size:15.5px;font-weight:600;color:var(--t1);line-height:1.4;margin-bottom:4px}
+.pauthors{font-size:12px;color:var(--tm);margin-bottom:6px}
+.pjournal{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-style:italic;color:var(--g700);font-family:var(--fd)}
+.pjournal::before{content:'';width:12px;height:1px;background:var(--g600)}
+.pdoi{display:inline-flex;align-items:center;gap:4px;font-family:var(--fm);font-size:10.5px;color:var(--a600);text-decoration:none;margin-top:5px}
+.pdoi:hover{color:var(--a800)}
+.ptype-badge{display:inline-block;font-family:var(--fm);font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:100px;margin-left:8px;text-transform:uppercase}
+.badge-patent{background:var(--a50);color:var(--a700);border:1px solid rgba(186,117,23,0.2)}
+.badge-book{background:var(--g50);color:var(--g700);border:1px solid var(--bdr)}
+.hidden{display:none!important}
+
+/* ACHIEVEMENTS */
+#achievements{background:var(--white)}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.ach-col h3{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--t1);margin-bottom:18px;padding-bottom:10px;border-bottom:1.5px solid var(--bdr)}
+.ach-list{display:flex;flex-direction:column;gap:10px;max-height:440px;overflow-y:auto;padding-right:4px}
+.ach-list::-webkit-scrollbar{width:3px}.ach-list::-webkit-scrollbar-thumb{background:var(--g200);border-radius:2px}
+.ach-item{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg)}
+.ach-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--g800);color:var(--g50);font-family:var(--fm);font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:500}
+.ach-text{font-size:12.5px;color:var(--t2);line-height:1.65}
+.ach-year{display:inline-block;font-family:var(--fm);font-size:10px;color:var(--a600);margin-top:3px}
+
+/* COURSES */
+.courses-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:0}
+.crs-card{padding:16px 20px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--bg);display:flex;flex-direction:column;gap:4px}
+.crs-code{font-family:var(--fm);font-size:11px;color:var(--a600);letter-spacing:0.5px}
+.crs-name{font-size:13.5px;font-weight:500;color:var(--t1)}
+.crs-info{font-size:11.5px;color:var(--tm)}
+
+/* COLLABORATORS */
+#collab{background:var(--bg)}
+.collab-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ccard{padding:16px 18px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--white);transition:border-color 0.2s,transform 0.2s;display:flex;flex-direction:column;gap:4px}
+.ccard:hover{border-color:var(--bdrm);transform:translateY(-3px)}
+.cinst{font-family:var(--fm);font-size:10px;color:var(--g700);letter-spacing:1px}
+.cname{font-family:var(--fd);font-size:15px;font-weight:600;color:var(--t1)}
+.cdept{font-size:11.5px;color:var(--tm)}
+
+/* TALKS */
+#talks{background:var(--bg-section)}
+.talk-list{display:flex;flex-direction:column;gap:10px;max-width:860px}
+.talk-item{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--white)}
+.talk-year{flex-shrink:0;font-family:var(--fm);font-size:11px;color:var(--g700);background:var(--g50);padding:3px 10px;border-radius:100px;border:1px solid var(--bdr);height:fit-content}
+.talk-title{font-size:13.5px;font-weight:500;color:var(--t1);margin-bottom:3px;line-height:1.45}
+.talk-venue{font-size:12px;color:var(--tm)}
+
+/* CONTACT */
+#contact{background:var(--white)}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.contact-form{display:flex;flex-direction:column;gap:13px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.fgroup{display:flex;flex-direction:column;gap:5px}
+.flabel{font-size:12px;color:var(--tm);font-weight:500}
+.finput,.ftextarea{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 14px;color:var(--t1);font-family:var(--fb);font-size:13.5px;transition:border-color 0.2s,box-shadow 0.2s;outline:none}
+.finput:focus,.ftextarea:focus{border-color:var(--g600);box-shadow:0 0 0 3px rgba(99,153,34,0.1)}
+.ftextarea{min-height:120px;resize:vertical}
+.fsubmit{background:var(--g800);color:var(--g50);border:none;padding:12px 28px;border-radius:var(--r);font-weight:600;font-size:13.5px;cursor:pointer;transition:background 0.2s,transform 0.2s;width:fit-content;font-family:var(--fb)}
+.fsubmit:hover{background:var(--g900);transform:translateY(-2px)}
+.contact-info{display:flex;flex-direction:column;gap:24px}
+.cblock h3{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.cblock p{font-size:13.5px;color:var(--t2);line-height:1.75}
+.citems{display:flex;flex-direction:column;gap:11px;margin-top:4px}
+.citem{display:flex;align-items:flex-start;gap:11px}
+.citem-icon{width:33px;height:33px;border-radius:8px;flex-shrink:0;background:var(--g50);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center}
+.citem-icon svg{width:14px;height:14px}
+.citem-label{font-size:10.5px;color:var(--tm);margin-bottom:1px}
+.citem-val{font-size:13px;color:var(--t1)}
+.citem-val a{color:var(--g700);text-decoration:none}.citem-val a:hover{text-decoration:underline}
+.funding-box{padding:20px;border-radius:var(--r);border:1px solid rgba(186,117,23,0.2);background:var(--a50)}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid var(--bdr);padding:32px 5%;background:var(--g900);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px}
+.fbrand span:first-child{font-family:var(--fd);font-size:16px;color:var(--g100);font-weight:600;display:block}
+.fbrand span:last-child{font-size:11.5px;color:var(--g400)}
+.flinks{display:flex;gap:22px;flex-wrap:wrap}
+.flinks a{font-size:12px;color:#7aab48;text-decoration:none;transition:color 0.2s}.flinks a:hover{color:var(--g100)}
+.fright{font-family:var(--fm);font-size:10.5px;color:#7aab48;text-align:right}
+.fright span{color:var(--a400)}
+
+/* FADE */
+.fade-in{opacity:0;transform:translateY(22px);transition:opacity 0.62s ease,transform 0.62s ease}
+.fade-in.visible{opacity:1;transform:none}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:1fr}.hero-right{display:none}
+  .about-grid,.contact-grid,.ach-grid{grid-template-columns:1fr}
+  .research-grid{grid-template-columns:repeat(2,1fr)}
+  .team-grid{grid-template-columns:repeat(2,1fr)}
+  .collab-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-links{display:none}.hamburger{display:flex}
+  .pi-badge{right:0;bottom:-16px}
+}
+@media(max-width:560px){
+  .research-grid,.team-grid,.collab-grid,.courses-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+}
+
+/* ALUMNI TABLE */
+.alumni-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.alumni-col{display:flex;flex-direction:column;gap:8px}
+.alumni-year-head{font-family:var(--fm);font-size:11px;color:var(--a700);letter-spacing:2px;text-transform:uppercase;padding:6px 10px;background:var(--a50);border-radius:6px;border:1px solid rgba(186,117,23,0.18);margin-bottom:4px}
+.alumni-item{font-size:12.5px;color:var(--t2);padding:8px 12px;border-radius:6px;border:1px solid var(--bdr);background:var(--white)}
+.alumni-item span{color:var(--tm);font-size:11px}
+</style>
+</head>
+<body>
+<canvas id="bioCanvas"></canvas>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#hero" class="nav-brand">
+    <div class="nav-logo">BNSB</div>
+    <div class="nav-title">
+      <strong>BNS Lab</strong>
+      <span>IIT Hyderabad</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#research">Research</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="#publications">Publications</a></li>
+    <li><a href="#tools">Tools &amp; Databases</a></li>
+    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#talks">Talks</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#contact" class="btn-join">Join Us</a></li>
+  </ul>
+  <button class="hamburger" onclick="document.querySelector('.mobile-menu').classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu">
+  <a href="#about" onclick="this.closest('.mobile-menu').classList.remove('open')">About</a>
+  <a href="#research" onclick="this.closest('.mobile-menu').classList.remove('open')">Research</a>
+  <a href="#team" onclick="this.closest('.mobile-menu').classList.remove('open')">Team</a>
+  <a href="#publications" onclick="this.closest('.mobile-menu').classList.remove('open')">Publications</a>
+  <a href="#tools" onclick="this.closest('.mobile-menu').classList.remove('open')">Tools &amp; Databases</a>
+  <a href="#achievements" onclick="this.closest('.mobile-menu').classList.remove('open')">Achievements</a>
+  <a href="#talks" onclick="this.closest('.mobile-menu').classList.remove('open')">Talks</a>
+  <a href="#contact" onclick="this.closest('.mobile-menu').classList.remove('open')">Contact</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid">
+    <div class="hero-left fade-in">
+      <div class="hero-badge"><div class="dot"></div>IIT Hyderabad · Dept. of Biotechnology · Est. Jan 2023</div>
+      <h1 class="hero-h1">Biological<br><em>Networks &</em><br>Systems Lab</h1>
+      <p class="hero-sub">Dr. Abhishek Subramanian's Computational Systems Biology Group — decoding biological mechanisms from omics data using network science, constraint-based modeling, and machine learning.</p>
+      <div class="hero-actions">
+        <a href="#research" class="btn-primary">Explore Research</a>
+        <a href="#publications" class="btn-outline">Publications</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">23+</span><span class="stat-lbl">Publications</span></div>
+        <div class="stat"><span class="stat-num">9+</span><span class="stat-lbl">Lab Members</span></div>
+        <div class="stat"><span class="stat-num">2023</span><span class="stat-lbl">Founded</span></div>
+      </div>
+    </div>
+    <div class="hero-right fade-in">
+      <div class="hero-panel">
+        <div class="ring ring-1"></div><div class="ring ring-2"></div><div class="ring ring-3"></div>
+        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="ng" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#639922" stop-opacity="0.85"/><stop offset="100%" stop-color="#3b6d11" stop-opacity="0.55"/></radialGradient>
+            <radialGradient id="cg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ba7517" stop-opacity="1"/><stop offset="100%" stop-color="#ef9f27" stop-opacity="0.7"/></radialGradient>
+          </defs>
+          <g stroke="rgba(99,153,34,0.22)" stroke-width="1.2" fill="none">
+            <line x1="200" y1="200" x2="80" y2="100"/><line x1="200" y1="200" x2="320" y2="100"/>
+            <line x1="200" y1="200" x2="340" y2="220"/><line x1="200" y1="200" x2="280" y2="340"/>
+            <line x1="200" y1="200" x2="120" y2="330"/><line x1="200" y1="200" x2="60" y2="230"/>
+            <line x1="200" y1="200" x2="130" y2="80"/><line x1="200" y1="200" x2="260" y2="70"/>
+            <line x1="80" y1="100" x2="130" y2="80"/><line x1="130" y1="80" x2="260" y2="70"/>
+            <line x1="260" y1="70" x2="320" y2="100"/><line x1="320" y1="100" x2="340" y2="220"/>
+            <line x1="340" y1="220" x2="280" y2="340"/><line x1="280" y1="340" x2="120" y2="330"/>
+            <line x1="120" y1="330" x2="60" y2="230"/><line x1="60" y1="230" x2="80" y2="100"/>
+          </g>
+          <g>
+            <circle cx="80" cy="100" r="9" fill="url(#ng)"><animate attributeName="r" values="9;11;9" dur="3s" repeatCount="indefinite"/></circle>
+            <circle cx="130" cy="80" r="7" fill="url(#ng)"><animate attributeName="r" values="7;9;7" dur="4s" repeatCount="indefinite"/></circle>
+            <circle cx="260" cy="70" r="8" fill="url(#ng)"><animate attributeName="r" values="8;10;8" dur="2.5s" repeatCount="indefinite"/></circle>
+            <circle cx="320" cy="100" r="9" fill="url(#ng)"><animate attributeName="r" values="9;11;9" dur="3.5s" repeatCount="indefinite"/></circle>
+            <circle cx="340" cy="220" r="8" fill="url(#ng)"><animate attributeName="r" values="8;10;8" dur="4s" repeatCount="indefinite"/></circle>
+            <circle cx="280" cy="340" r="9" fill="url(#ng)"><animate attributeName="r" values="9;11;9" dur="2.8s" repeatCount="indefinite"/></circle>
+            <circle cx="120" cy="330" r="8" fill="url(#ng)"><animate attributeName="r" values="8;10;8" dur="3.2s" repeatCount="indefinite"/></circle>
+            <circle cx="60" cy="230" r="9" fill="url(#ng)"><animate attributeName="r" values="9;11;9" dur="3.8s" repeatCount="indefinite"/></circle>
+            <circle cx="200" cy="200" r="18" fill="url(#cg)"><animate attributeName="r" values="18;22;18" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="200" cy="200" r="28" fill="none" stroke="rgba(186,117,23,0.28)" stroke-width="1.2"><animate attributeName="r" values="28;38;28" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="155" cy="140" r="6" fill="url(#ng)"/><circle cx="245" cy="140" r="6" fill="url(#ng)"/>
+            <circle cx="155" cy="260" r="6" fill="url(#ng)"/><circle cx="245" cy="260" r="6" fill="url(#ng)"/>
+          </g>
+          <g stroke="rgba(99,153,34,0.4)" stroke-width="1.3" fill="none">
+            <line x1="200" y1="200" x2="155" y2="140"/><line x1="200" y1="200" x2="245" y2="140"/>
+            <line x1="200" y1="200" x2="245" y2="260"/><line x1="200" y1="200" x2="155" y2="260"/>
+            <line x1="155" y1="140" x2="245" y2="140"/><line x1="245" y1="140" x2="245" y2="260"/>
+            <line x1="245" y1="260" x2="155" y2="260"/><line x1="155" y1="260" x2="155" y2="140"/>
+          </g>
+          <g fill="rgba(59,109,17,0.5)" font-family="monospace" font-size="9">
+            <text x="48" y="95">Leishmania</text><text x="306" y="92">Angiogenesis</text>
+            <text x="32" y="248">Infection</text><text x="258" y="356">Metabolism</text>
+            <text x="184" y="218" text-anchor="middle" fill="rgba(133,79,11,0.85)" font-size="9">BNSB</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Computational Systems Biology</span><span class="adot">◆</span>
+    <span>Flux Balance Analysis</span><span class="adot">◆</span>
+    <span>Omics Data Integration</span><span class="adot">◆</span>
+    <span>Genome-Scale Metabolic Models</span><span class="adot">◆</span>
+    <span>Machine Learning in Biology</span><span class="adot">◆</span>
+    <span>Parasitology &amp; Immunology</span><span class="adot">◆</span>
+    <span>Gene Regulatory Networks</span><span class="adot">◆</span>
+    <span>Host-Parasite Interactions</span><span class="adot">◆</span>
+    <span>Computational Systems Biology</span><span class="adot">◆</span>
+    <span>Flux Balance Analysis</span><span class="adot">◆</span>
+    <span>Omics Data Integration</span><span class="adot">◆</span>
+    <span>Genome-Scale Metabolic Models</span><span class="adot">◆</span>
+    <span>Machine Learning in Biology</span><span class="adot">◆</span>
+    <span>Parasitology &amp; Immunology</span><span class="adot">◆</span>
+    <span>Gene Regulatory Networks</span><span class="adot">◆</span>
+    <span>Host-Parasite Interactions</span><span class="adot">◆</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="pi-photo-wrap fade-in">
+      <img class="pi-photo" src="https://lh3.googleusercontent.com/sitesv/APaQ0SQkYqh03-lx51I4d8PPisv9D9d2yCS1CXg98nt2JlVFmUsAR208oi8JXMksnt6ptnKButZMRMaa49DeFh_mmofTn8aZI-UyyAaA0jLpxqN7LW0dwAtg57-ex5x3ACCbHFmTHoXGFVCLxdWB-RE9lN3OmSQvTXmLFv8wnMoQxdONx7y-WCZzxfszLD2EV64y70cobsMULV1zBgBzFFWMFMAFD9lOpS1r3Vfj=w600" alt="Dr. Abhishek Subramanian" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="pi-photo-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div>
+      <div class="pi-badge"><div class="big">IIT-H</div><div class="sm">BT Dept · Kandi Campus</div></div>
+    </div>
+    <div class="about-text fade-in">
+      <div class="slabel">Group Leader</div>
+      <h2 class="stitle">Dr. Abhishek <em>Subramanian</em></h2>
+      <p>Assistant Professor, Department of Biotechnology, IIT Hyderabad (Dec 2022 – present). DBT–Ramalingaswami Re-entry Fellow. Computational biologist with ~12 years of experience spanning biological scales.</p>
+      <p>Formerly at CSIR-National Chemical Laboratory, Pune (PhD, Dr. Ram Rup Sarkar) and postdoctoral research at Prof. Peter Carmeliet's lab, VIB-KU Leuven Center for Cancer Biology, Belgium — one of the world's most renowned vascular biology labs.</p>
+      <p>Expertise spans constraint-based modeling, kinetic modeling, omics data integration, statistical regression, machine learning, genomics, transcriptomics, and bioinformatics. Specifically interested in metabolic adaptations, interspecies interactions during infection, and immunometabolism.</p>
+      <div class="pi-info-card">
+        <div class="pi-name">Dr. Abhishek Subramanian</div>
+        <div class="pi-role">Assistant Professor · Dept. of Biotechnology · IIT Hyderabad</div>
+        <div style="font-family:var(--fm);font-size:11.5px;color:var(--g700);margin-top:4px">abhisheks@bt.iith.ac.in</div>
+        <div class="pi-links">
+          <a href="https://scholar.google.com/citations?hl=en&user=fFe0pfYAAAAJ" target="_blank" class="pi-link">📚 Google Scholar</a>
+          <a href="https://www.researchgate.net/profile/Abhishek-Subramanian" target="_blank" class="pi-link">🔬 ResearchGate</a>
+          <a href="https://www.linkedin.com/in/abhishek-subramanian-ph-d-a48b9032/" target="_blank" class="pi-link">💼 LinkedIn</a>
+          <a href="https://twitter.com/sci_abhishek" target="_blank" class="pi-link">🐦 Twitter</a>
+          <a href="https://biotech.iith.ac.in/pages/peoplePages/faculty.html" target="_blank" class="pi-link">🏛 Faculty Page</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESEARCH -->
+<section id="research">
+  <div class="shead fade-in">
+    <div class="slabel">What We Do</div>
+    <h2 class="stitle">Research <em>Areas</em></h2>
+    <p class="ssub">Our group asks questions that facilitate understanding of design principles of biological systems, using computational techniques to discover new molecular/pathway mechanisms from raw biological data.</p>
+  </div>
+  <div class="research-grid">
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><circle cx="4" cy="4" r="2"/><circle cx="20" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><line x1="8" y1="12" x2="4" y2="4"/><line x1="16" y1="12" x2="20" y2="4"/><line x1="8" y1="12" x2="4" y2="20"/><line x1="16" y1="12" x2="20" y2="20"/></svg></div>
+      <h3>Computational Systems & Network Biology</h3>
+      <p>Constraint-based genome-scale modeling, graph theory, and condition-specific statistical inference of biological networks — metabolism, gene regulation, and protein-protein interaction networks.</p>
+      <span class="rtag">→ GEMs · FBA · Graph Theory</span>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><polyline points="3,18 8,11 14,15 20,6"/><circle cx="3" cy="18" r="1.5" fill="#3b6d11"/><circle cx="8" cy="11" r="1.5" fill="#3b6d11"/><circle cx="14" cy="15" r="1.5" fill="#3b6d11"/><circle cx="20" cy="6" r="1.5" fill="#3b6d11"/></svg></div>
+      <h3>Omics Data Analysis & Bioinformatics</h3>
+      <p>Integration of transcriptomics, proteomics, single-cell RNA-seq, and metabolomics data into biological networks. Big Data Biology: from omics to function — uncovering pathway mechanisms from raw biological data.</p>
+      <span class="rtag">→ RNA-Seq · scRNA-seq · Multi-Omics</span>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M12 3 C16 6,16 18,12 21" fill="none"/><path d="M12 3 C8 6,8 18,12 21" fill="none"/><circle cx="12" cy="12" r="9" stroke-dasharray="3 2"/></svg></div>
+      <h3>Metabolism & Gene Regulation</h3>
+      <p>Metabolic adaptations in parasites, endothelial cells, and pathogens. Host-parasite metabolic interactions. Condition-specific metabolic reprogramming in infection and disease. Angiogenesis metabolism.</p>
+      <span class="rtag">→ Leishmania · Endothelial Cells · Immunometabolism</span>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><rect x="3" y="10" width="4" height="11" rx="1" fill="#3b6d11" fill-opacity="0.2"/><rect x="10" y="6" width="4" height="15" rx="1" fill="#3b6d11" fill-opacity="0.35"/><rect x="17" y="2" width="4" height="19" rx="1" fill="#3b6d11" fill-opacity="0.55"/></svg></div>
+      <h3>Mathematical, Statistical Modelling & ML</h3>
+      <p>Machine learning pipelines, kinetic modeling of biochemical pathways, population dynamics, and statistical regression models. Discovering essential enzymes in metabolic networks using ML approaches.</p>
+      <span class="rtag">→ Machine Learning · Kinetic Models · Regression</span>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M5 21 C5 15 8 13 12 13 C16 13 19 15 19 21" fill="none"/><path d="M5 17 C5 11 8 9 12 9 C16 9 19 11 19 17" fill="none" stroke-dasharray="2 2"/><circle cx="12" cy="6" r="2.5" fill="#3b6d11" fill-opacity="0.5"/></svg></div>
+      <h3>Parasitology & Immunology</h3>
+      <p>Host-parasite metabolic interactions in <em>Cryptosporidium parvum</em>, <em>Cryptococcus gattii</em>, and <em>Aspergillus fumigatus</em> infections. Parasite-dependent macrophage transition. Immunometabolism in disease contexts.</p>
+      <span class="rtag">→ Infection Biology · Macrophage Biology · Leishmaniasis</span>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21 h8 M12 17 v4" stroke-linecap="round"/></svg></div>
+      <h3>Tool & Database Development</h3>
+      <p>NAViFluX — a visualization-centric platform for interactive analysis of genome-scale metabolic networks. BIOMEX for single-cell omics data interpretation. Open-source pipelines for the community.</p>
+      <span class="rtag">→ NAViFluX · BIOMEX · Open Source</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="shead fade-in">
+    <div class="slabel">Our People</div>
+    <h2 class="stitle">Meet the <em>Team</em></h2>
+    <p class="ssub">A group of motivated researchers tackling exciting questions in computational systems biology.</p>
+  </div>
+
+  <div class="team-section-label">PhD Scholars</div>
+  <div class="team-grid fade-in">
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUAyleh2wmNDQ6d-mx9v9dPIIJZktbsvf0DrYIbEfa2-FkDF_eVkt7et8lFtfwGm-uvgUxXeUHEwtQNgkHJzgutsXvUAbLkgYclhKMYLVCZVZripexRxPPlrT5UU1FCjEpSMrk353IImk6xoa3PgDy5vTcvYAQjWaxusz9Aj3jHDDXU0lR_TfZZSw-67Co7KXRx9xB9n4Zelw-xubj6J4hIvg2_-76lYpwbEC4A=w400" alt="Pabbithi Bharathnaveen" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Mr. Pabbithi Bharathnaveen</div><div class="trole">PhD Scholar · DBT-SRF</div><div class="tdesc">Parasite metabolic adaptations and host-parasite interactions in <em>Cryptosporidium parvum</em> infection using computational approaches.</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCYr3iJscH_oZp4YYWtw743v_lPJOQ5GpGmjmenTdURNi1wfel0t_lm4pJpM4H-dnjBYK0fosa0gqQwVsLXCbz3s1FkoIjw8nfGFeuDlI_OQi8vIaoBvyEishOCQ5sxCMQsAIimBLNGbo6gj366DcSGgvkYntJ-JQAzj4fVJU9Pasf2xvx1r_TFnUVY_pIazHxtjnrrsO7MmU0vT6zj6xKrrAnUOJz3R8Ap=w400" alt="Nishant Kumar" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Mr. Nishant Kumar</div><div class="trole">PhD Scholar · MoE Interdisciplinary</div><div class="tdesc">Building a Machine Learning model using multi-omics data for diagnosis of Lower Respiratory Tract Infection (LRTI).</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBoPJcxWttEsoXkECiW6UQ96MWlhH2oioaoxc6GYExgQR0vxOqpWuGGacuS6vKhSd9EcaftmfW1Jq1JQu4rKAf12ykOrUfEncUh7BZeRrOscTLRNtD5gWVzw0MoTGapHVoYXs16Osz35SR59RB4XPPMrgbJJUz5PE2dyYt1hFpl6DAkaScmVAKTn_j9S5MnWf0_I-6e3pfJMH17weSGwynvhhWHEoeMEOY=w400" alt="Nimisha Tripathi" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Ms. Nimisha Tripathi</div><div class="trole">PhD Scholar · UGC-SRF</div><div class="tdesc">Host-parasite metabolic interactions in <em>Cryptococcus gattii</em> infection using computational systems biology approaches.</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCKIycOf5uiE8UUj0BNVzzWohgRGktYDZsw1hBW7AKupIJQbhfki8K6y2qPxcxyT234T1u98LfirLd8Z4dQdSQ1UeQxfQUAXimeF7sPHh5nxEjjCjZGiG05xsSsgebcetfY8kNYIXXxHtKN-zLKJhvkkp5OeLAbXezECFzRi84JKySrPluEa9NSjmPCGwbaM4kUZPaZainIAl_PZDO2ZdIAIKhJwMyL3CZK=w400" alt="Prashant Singh" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Mr. Prashant Singh</div><div class="trole">PhD Scholar · Project Funded</div><div class="tdesc">Creating an automated tool (NAViFluX) for Metabolic Reconstruction Networks and pathway visualization.</div></div>
+    </div>
+  </div>
+  <!-- Row 2 PhD -->
+  <div style="margin-top:18px" class="fade-in">
+    <div class="team-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="tcard">
+        <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDEuWWjjw4UXU5foe3xoqfQkOog4MpwbbdjmECroEmffMjnE3oT8sdpqYtrZrCzy25I0QNrb3Sh76HH93W6nQfq-fB6oaAzsnTDHL6WecHpToX9ovw-5Q8r_E9SyyORPgLTAEvenMX2UjR_FlkIm_YHzOFYvgHdosaVGY3tcB7fwD43cfS8O_4SjCViVxcNcvx9-QZCosgZnbmAzmkh4exleT30XAwGSeHWGKM=w400" alt="Manjunatha B K" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+        <div class="tinfo"><div class="tname">Mr. Manjunatha B K</div><div class="trole">PhD Scholar · ICMR-JRF</div><div class="tdesc">Host-parasite metabolic interactions in <em>Aspergillus fumigatus</em> infection using computational approaches.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="team-section-label">M.Tech Students</div>
+  <div class="team-grid fade-in">
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUDcl3-XH0D7ABSE7ASMkVgwBcwQ11n-IFCo26kH9yVYzSSVJgcElXpGJJUz5PE2dyYt1hFpl6DAkaScmVAKTn_j9S5MnWf0_I-6e3pfJMH17weSGwynvhhWHEoeMEOY=w400" alt="Harshita Bansal" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Ms. Harshita Bansal</div><div class="trole">M.Tech Student</div><div class="tdesc">Parasite-dependent macrophage transition — how parasites manipulate host macrophages, altering activation state to promote parasite survival.</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBPXsqqnXP2p8PASELir_swK3W5QjIy6X8lPLFfJbQrzhq0XnLV0PsnGCysQO8aiUcprWUIlA0x7BvFYJ2ZWdpVotVE_Ok0vWiLZKhwb0OeINLYNk4zq5A5U3gKYZYDuj6TlJ7EqMyNZAlkUHL7dp83DQ1o5EgUT9Wes2s7noRmLxmYaP3gj-Lfvoq3sOfYfMXvkjvU2UZrtVMgZFOAx73KCl6PzLVE66OE8Uc=w400" alt="Divyesh Pant" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Mr. Divyesh Pant</div><div class="trole">M.Tech Student</div><div class="tdesc">Identification of features associated with multi-drug resistance in <em>Pseudomonas aeruginosa</em> using data-driven models.</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUA4YR7OPVlJtX09jBM51JMXtiKTRUFLEn755TTfL3lBr3AS5ZFT5PX9GXbgeus5ickJRniozvsbObp3x2Dgx1O9tjLozKYVQfHH00iLDzwahO22Np0DtyTJs5HRsCyi5Ow3L1DJauhWd__AXtd41OCD2219YPdCTNTdlf6y6U1tGaYhX7HE5NmAg_fKp4zvLoFLraxZciGbkf71d8ACLrLbUzK91Lzrpmd13vU=w400" alt="Shachi Anil Kulkarni" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Ms. Shachi Anil Kulkarni</div><div class="trole">M.Tech Student</div><div class="tdesc">Thesis work in progress — computational systems biology application.</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tphoto"><img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBlVXIUqSqPJaeR82xRgfXDj1qFmZ5Q9HNB-Fmn5yhDtHMeLo2YZ_iCBaBkwiGse-CktqIegBgAaH8GOrIuO_waPqEI67zq5JhHNesDu6HbCxN8sH3fcTaL5jDlcr1TeLzeWNzd2LYqVOGCgnx-p3U=w400" alt="Gokul Raj" onerror="this.style.display='none';this.parentElement.querySelector('.tphoto-placeholder').style.display='flex'"><div class="tphoto-placeholder" style="display:none"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="18" r="10" stroke="#3b6d11" stroke-width="1.5"/><path d="M8 42 C8 32 16 28 24 28 C32 28 40 32 40 42" stroke="#3b6d11" stroke-width="1.5" fill="none"/></svg></div></div>
+      <div class="tinfo"><div class="tname">Mr. Gokul Raj</div><div class="trole">M.Tech Student</div><div class="tdesc">Predictive modeling and pathway engineering for improved ethanol production in yeast.</div></div>
+    </div>
+  </div>
+
+  <div class="team-section-label">Current Interns</div>
+  <div class="intern-list fade-in">
+    <div class="intern-chip">👨‍🎓 P S Harish <span>B.Tech Biotechnology &amp; Bioinformatics · IIT Hyderabad</span></div>
+    <div class="intern-chip">👨‍🎓 P Ruthvik Jayaditya <span>BSc Bioscience &amp; Biotechnology · SSSIHL, Puttaparthi</span></div>
+  </div>
+
+  <div class="team-section-label" style="margin-top:36px">Alumni</div>
+  <div class="alumni-grid fade-in">
+    <div class="alumni-col">
+      <div class="alumni-year-head">2025</div>
+      <div class="alumni-item">Mayuri Chourasia <span>· B.Tech Biotechnology final year, IITH</span></div>
+      <div class="alumni-item">Sachin Dev <span>· M.Tech Dissertation, IITH</span></div>
+      <div class="alumni-item">Ankita Hulekal <span>· M.Sc Dissertation, JSS AHER Mysuru</span></div>
+      <div class="alumni-item">Aadira Krishnakumar <span>· M.Sc Dissertation, JSS AHER Mysuru</span></div>
+      <div class="alumni-item">Ashmeet Sidhu <span>· B.Tech 3rd year, IITH</span></div>
+      <div class="alumni-item">Sudheesh <span>· B.Tech 3rd year, IITH</span></div>
+    </div>
+    <div class="alumni-col">
+      <div class="alumni-year-head">2024</div>
+      <div class="alumni-item">Sanika <span>· IITH SURE Summer Intern, NIT Warangal</span></div>
+      <div class="alumni-item">Neha Anand <span>· Summer Intern, IISER Mohali</span></div>
+      <div class="alumni-item">Moumita Bairagi <span>· M.Tech Dissertation, IITH</span></div>
+      <div class="alumni-year-head" style="margin-top:12px">2023</div>
+      <div class="alumni-item">Arundhati Dhar <span>· IITH SURE Summer Intern, KIIT Bhubaneswar</span></div>
+      <div class="alumni-item">Sandra Francis <span>· Summer Intern, IISER Thiruvananthapuram</span></div>
+      <div class="alumni-item">Tejas Kannampuzha <span>· Summer Intern, Univ. of Hyderabad</span></div>
+      <div class="alumni-item">Subhashini Thiyagarajan <span>· 6-month Intern, Bannari Amman IT</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PUBLICATIONS -->
+<section id="publications">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-bottom:28px" class="fade-in">
+    <div><div class="slabel">Our Work</div><h2 class="stitle">Research <em>Articles</em></h2></div>
+    <a href="https://scholar.google.com/citations?hl=en&user=fFe0pfYAAAAJ" target="_blank" style="font-size:13px;color:var(--g700);text-decoration:none;font-weight:600">View on Google Scholar →</a>
+  </div>
+  <div class="pub-filter fade-in">
+    <button class="pfbtn active" onclick="filterPubs('all',this)">All</button>
+    <button class="pfbtn" onclick="filterPubs('iith',this)">After IIT-H</button>
+    <button class="pfbtn" onclick="filterPubs('previous',this)">Previous</button>
+    <button class="pfbtn" onclick="filterPubs('patent',this)">Patents</button>
+    <button class="pfbtn" onclick="filterPubs('book',this)">Book Chapters</button>
+  </div>
+  <div class="pub-list fade-in" id="pubList">
+    <!-- After IITH -->
+    <div class="pitem" data-cat="iith">
+      <div class="pyear">2026</div>
+      <div>
+        <div class="ptitle">NAViFluX: a visualization‑centric platform for interactive analysis, refinement and design of genome‑scale metabolic networks</div>
+        <div class="pauthors">Manjunatha Beduru Krishnamurthy, Harish P S, <strong>Abhishek Subramanian</strong></div>
+        <div class="pjournal">bioRxiv (Preprint)</div>
+        <a href="https://doi.org/10.64898/2026.01.03.697453" target="_blank" class="pdoi">DOI: 10.64898/2026.01.03.697453 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="iith">
+      <div class="pyear">2025</div>
+      <div>
+        <div class="ptitle">Trehalose metabolism regulates transcriptional control of muscle development in lepidopteran insects</div>
+        <div class="pauthors">Mohite S, Devkate T, Kalaskar P, Singh P, <strong>Abhishek Subramanian</strong>, Joshi RJ</div>
+        <div class="pjournal">eLife 15:RP109485</div>
+        <a href="https://elifesciences.org/reviewed-preprints/109485" target="_blank" class="pdoi">eLife ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="iith">
+      <div class="pyear">2025</div>
+      <div>
+        <div class="ptitle">Editorial: Bacterial population heterogeneity, stress response and antibiotic tolerance</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Kurthkoti K, Mattioni Marchetti V and Vijay S</div>
+        <div class="pjournal">Frontiers in Cellular and Infection Microbiology 15:1754314</div>
+        <a href="https://doi.org/10.3389/fcimb.2025.1754314" target="_blank" class="pdoi">DOI: 10.3389/fcimb.2025.1754314 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="iith">
+      <div class="pyear">2024</div>
+      <div>
+        <div class="ptitle">The glutamate-aspartate antiporter SLC25A13 in endothelial cells, an overlooked player in angiogenesis</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Cuypers A, Yagüe Sanz P, Declercq M et al., Carmeliet P</div>
+        <div class="pjournal">EMBO Molecular Medicine (Under Revision)</div>
+      </div>
+    </div>
+    <div class="pitem" data-cat="iith">
+      <div class="pyear">2024</div>
+      <div>
+        <div class="ptitle">Single cell RNA sequencing of cystic fibrosis liver disease explants revealed alternative complement activation</div>
+        <div class="pauthors">Declercq M, Treps L, ..., <strong>Abhishek Subramanian</strong> et al., Carmeliet P, Witters P</div>
+        <div class="pjournal">Liver International, 44 (9), 2382–2395</div>
+        <a href="https://doi.org/10.1111/liv.15963" target="_blank" class="pdoi">DOI: 10.1111/liv.15963 ↗</a>
+      </div>
+    </div>
+    <!-- Previous -->
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2022</div>
+      <div>
+        <div class="ptitle">The pulmonary vasculature in lethal COVID-19 and idiopathic pulmonary fibrosis at single cell resolution</div>
+        <div class="pauthors">Laura de Rooij, Lisa Becker, ..., <strong>Abhishek Subramanian</strong>, ..., Peter Carmeliet</div>
+        <div class="pjournal">Cardiovascular Research, 119 (2), 520–535</div>
+        <a href="https://doi.org/10.1093/cvr/cvac139" target="_blank" class="pdoi">DOI: 10.1093/cvr/cvac139 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2022</div>
+      <div>
+        <div class="ptitle">Angiogenesis goes computational – the future way forward to discover new angiogenic targets?</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Pooya Zakeri, Mira Mousa et al., Peter Carmeliet</div>
+        <div class="pjournal">Computational and Structural Biotechnology Journal, 20, 5235–5255</div>
+        <a href="https://doi.org/10.1016/j.csbj.2022.09.019" target="_blank" class="pdoi">DOI: 10.1016/j.csbj.2022.09.019 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2021</div>
+      <div>
+        <div class="ptitle">Endothelial metabolism going single</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Lisa M. Becker, Peter Carmeliet</div>
+        <div class="pjournal">Nature Metabolism, 3, 593–594</div>
+        <a href="https://doi.org/10.1038/s42255-021-00399-3" target="_blank" class="pdoi">DOI: 10.1038/s42255-021-00399-3 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2020</div>
+      <div>
+        <div class="ptitle">BIOMEX: an interactive workflow for (single cell) omics data interpretation and visualization</div>
+        <div class="pauthors">Federico Taverna, Jermaine Goveia, ..., <strong>Abhishek Subramanian</strong>, ..., Peter Carmeliet</div>
+        <div class="pjournal">Nucleic Acids Research, 48 (W1), W385–W394</div>
+        <a href="https://doi.org/10.1093/nar/gkaa332" target="_blank" class="pdoi">DOI: 10.1093/nar/gkaa332 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2020</div>
+      <div>
+        <div class="ptitle">Single-Cell RNA Sequencing Maps Endothelial Metabolic Plasticity in Pathological Angiogenesis</div>
+        <div class="pauthors">Rohlenova K#, Goveia J#, García-Caballero M#, <strong>Abhishek Subramanian</strong># et al., Peter Carmeliet <em>(#equal contribution)</em></div>
+        <div class="pjournal">Cell Metabolism, 31(4), 862–877</div>
+        <a href="https://doi.org/10.1016/j.cmet.2020.03.009" target="_blank" class="pdoi">DOI: 10.1016/j.cmet.2020.03.009 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2018</div>
+      <div>
+        <div class="ptitle">Perspectives on Leishmania species and stage-specific adaptive mechanisms</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Ram Rup Sarkar</div>
+        <div class="pjournal">Trends in Parasitology, 34(12), 1068–1081</div>
+        <a href="https://doi.org/10.1016/j.pt.2018.09.004" target="_blank" class="pdoi">DOI: 10.1016/j.pt.2018.09.004 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2018</div>
+      <div>
+        <div class="ptitle">Evolutionary Perspectives of Genotype–Phenotype Factors in Leishmania Metabolism</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Ram Rup Sarkar</div>
+        <div class="pjournal">Journal of Molecular Evolution, 86(7), 443–456</div>
+        <a href="https://doi.org/10.1007/s00239-018-9857-5" target="_blank" class="pdoi">DOI: 10.1007/s00239-018-9857-5 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2017</div>
+      <div>
+        <div class="ptitle">Revealing the mystery of metabolic adaptations using a genome scale model of Leishmania infantum</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Ram Rup Sarkar</div>
+        <div class="pjournal">Scientific Reports, 7(1):10262</div>
+        <a href="https://doi.org/10.1038/s41598-017-10743-x" target="_blank" class="pdoi">DOI: 10.1038/s41598-017-10743-x ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2017</div>
+      <div>
+        <div class="ptitle">An integrative machine learning strategy for improved prediction of essential genes in Escherichia coli metabolism using flux-coupled features</div>
+        <div class="pauthors">Sutanu Nandi, <strong>Abhishek Subramanian</strong>, Ram Rup Sarkar</div>
+        <div class="pjournal">Molecular BioSystems, 13, 1584–1596</div>
+        <a href="https://doi.org/10.1039/C7MB00234C" target="_blank" class="pdoi">DOI: 10.1039/C7MB00234C ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2015</div>
+      <div>
+        <div class="ptitle">Dissecting Leishmania infantum energy metabolism — a systems perspective</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Jitesh Jhawar, Ram Rup Sarkar</div>
+        <div class="pjournal">PLoS ONE, 10(9): e0137976</div>
+        <a href="https://doi.org/10.1371/journal.pone.0137976" target="_blank" class="pdoi">DOI: 10.1371/journal.pone.0137976 ↗</a>
+      </div>
+    </div>
+    <div class="pitem" data-cat="previous">
+      <div class="pyear">2015</div>
+      <div>
+        <div class="ptitle">Comparison of codon usage bias across Leishmania and Trypanosomatids to understand mRNA secondary structure, relative protein abundance and pathway functions</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong>, Ram Rup Sarkar</div>
+        <div class="pjournal">Genomics, 106, 232–241</div>
+        <a href="https://doi.org/10.1016/j.ygeno.2015.05.009" target="_blank" class="pdoi">DOI: 10.1016/j.ygeno.2015.05.009 ↗</a>
+      </div>
+    </div>
+    <!-- Patent -->
+    <div class="pitem" data-cat="patent">
+      <div class="pyear">2023 <span class="ptype-badge badge-patent">Patent</span></div>
+      <div>
+        <div class="ptitle">Method of Identification of Combinatorial Enzymatic Reaction Targets in Glioblastoma Specific Metabolic Network</div>
+        <div class="pauthors">Ram Rup Sarkar, Rupa Bhowmick, <strong>Abhishek Subramanian</strong></div>
+        <div class="pjournal">Patent No. 454732 · Granted 26-09-2023</div>
+      </div>
+    </div>
+    <!-- Book Chapters -->
+    <div class="pitem" data-cat="book">
+      <div class="pyear">2024 <span class="ptype-badge badge-book">Book Chapter</span></div>
+      <div>
+        <div class="ptitle">Artificial Intelligence in Bioinformatics</div>
+        <div class="pauthors"><strong>Abhishek Subramanian</strong> and Nishant Kumar</div>
+        <div class="pjournal">Chapter 21, pp. 357–374 · CRC Press</div>
+      </div>
+    </div>
+    <div class="pitem" data-cat="book">
+      <div class="pyear">2025 <span class="ptype-badge badge-book">Book Chapter</span></div>
+      <div>
+        <div class="ptitle">Systems Biology Analysis of Lignin Bioconversion</div>
+        <div class="pauthors">Manjunatha B. K., <strong>Abhishek Subramanian</strong></div>
+        <div class="pjournal">Handbook of Lignin Biorefineries · Springer Nature (Submitted)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="shead fade-in">
+    <div class="slabel">Software</div>
+    <h2 class="stitle">Tools &amp; <em>Databases</em></h2>
+    <p class="ssub">Open-source platforms and pipelines developed by our lab for systems biology and multi-omics analysis.</p>
+  </div>
+  <div class="research-grid">
+    <div class="rcard fade-in">
+      <div class="ricon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      </div>
+      <h3>NAViFluX</h3>
+      <p>A visualization-centric, web-based platform for interactive analysis, refinement, and engineering of genome-scale metabolic networks (GSMNs). It integrates pathway visualization, flux balance analysis, enrichment analysis, and network topology exploration. Unlike conventional tools, NAViFluX enables direct manipulation of reactions and real-time flux observation.</p>
+      <div class="pi-links" style="margin-top:15px">
+        <a href="https://github.com/bnsb-lab-iith/NAViFluX" target="_blank" class="pi-link">💻 GitHub</a>
+        <a href="https://doi.org/10.1093/bioinformatics/btag191" target="_blank" class="pi-link">📄 Paper</a>
+      </div>
+    </div>
+    <div class="rcard fade-in">
+      <div class="ricon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <h3>BIOMEX</h3>
+      <p>An interactive workflow for (single cell) omics data interpretation and visualization. BIOMEX provides a comprehensive environment for processing and analyzing multi-omics datasets, facilitating biological insight discovery from complex multi-dimensional data.</p>
+      <div class="pi-links" style="margin-top:15px">
+        <a href="https://doi.org/10.1093/nar/gkaa332" target="_blank" class="pi-link">📄 Paper</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ACHIEVEMENTS -->
+<section id="achievements">
+  <div class="shead fade-in"><div class="slabel">Recognitions</div><h2 class="stitle">Achievements &amp; <em>Awards</em></h2></div>
+  <div class="ach-grid fade-in">
+    <div class="ach-col">
+      <h3>Awards & Honours</h3>
+      <div class="ach-list">
+        <div class="ach-item"><div class="ach-num">1</div><div><div class="ach-text">DBT – Ramalingaswamy Re-entry Fellowship 2021-22 (5 years) from Dept. of Biotechnology, Govt. of India</div><div class="ach-year">2022</div></div></div>
+        <div class="ach-item"><div class="ach-num">2</div><div><div class="ach-text">Selected as Young Investigator at YIM–2024, Bhopal (IndiaBioScience &amp; IISER-Bhopal)</div><div class="ach-year">2024</div></div></div>
+        <div class="ach-item"><div class="ach-num">3</div><div><div class="ach-text">Invited as Plenary Speaker at International Conference on "Global Collaboration in Pharmaceuticals" — JSS College of Pharmacy, Ooty</div><div class="ach-year">2024</div></div></div>
+        <div class="ach-item"><div class="ach-num">4</div><div><div class="ach-text">Keerthi Sangoram Memorial Endowment Award for Best Research Scholar — Biological Sciences, CSIR-NCL Research Foundation</div><div class="ach-year">2018</div></div></div>
+        <div class="ach-item"><div class="ach-num">5</div><div><div class="ach-text">Best Poster at 1st IBSE International Symposium, IIT Madras</div><div class="ach-year">2018</div></div></div>
+        <div class="ach-item"><div class="ach-num">6</div><div><div class="ach-text">NCL-RF Agnimitra Award for Best Poster in Biological Sciences — National Science Day, CSIR-NCL</div><div class="ach-year">2016</div></div></div>
+        <div class="ach-item"><div class="ach-num">7</div><div><div class="ach-text">ISCB/InCOB International Travel Grant — 15th International Conference on Bioinformatics, Singapore</div><div class="ach-year">2016</div></div></div>
+        <div class="ach-item"><div class="ach-num">8</div><div><div class="ach-text">Best Poster &amp; Oral Presentation (Special Mention) — CDAC Conference "Accelerating Biology, Catalyzing Evolution"</div><div class="ach-year">2015</div></div></div>
+        <div class="ach-item"><div class="ach-num">9</div><div><div class="ach-text">BINC Ph.D Fellowship — All India Rank 23, Dept. of Biotechnology, Govt. of India</div><div class="ach-year">2012</div></div></div>
+        <div class="ach-item"><div class="ach-num">10</div><div><div class="ach-text">G. N. Ramachandran Fellowship — consistently ranked top 5 in each semester of M.Sc. Bioinformatics</div><div class="ach-year">2010–2012</div></div></div>
+        <div class="ach-item"><div class="ach-num">11</div><div><div class="ach-text">Indian Academy of Sciences (IAS) Summer Research Fellowship — IISc, India</div><div class="ach-year">2011</div></div></div>
+      </div>
+    </div>
+    <div class="ach-col">
+      <h3>Courses Taught @ IITH</h3>
+      <div class="courses-grid">
+        <div class="crs-card"><div class="crs-code">BT3203</div><div class="crs-name">Machine Learning for Bioinformatics</div><div class="crs-info">5th Sem · 3rd Year B.Tech</div></div>
+        <div class="crs-card"><div class="crs-code">BT4143</div><div class="crs-name">Biological Data Analysis</div><div class="crs-info">8th Sem · 4th Year B.Tech</div></div>
+        <div class="crs-card"><div class="crs-code">BT5010</div><div class="crs-name">Systems Biology</div><div class="crs-info">Elective · M.Tech &amp; PhD</div></div>
+        <div class="crs-card"><div class="crs-code">BT3123</div><div class="crs-name">R and Python for Biologists</div><div class="crs-info">3rd Sem · 2nd Year B.Tech</div></div>
+      </div>
+      <h3 style="margin-top:24px;font-family:var(--fd);font-size:22px;font-weight:700;color:var(--t1);margin-bottom:12px;padding-bottom:10px;border-bottom:1.5px solid var(--bdr)">Editorial &amp; Service</h3>
+      <div class="ach-list" style="max-height:none">
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Reviewer — Scientific Reports (Nature Publishing Group)</div></div>
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Reviewer — npj Systems Biology and Applications (Nature)</div></div>
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Topic Editor, Special Issue "Bacterial Population Heterogeneity" — Frontiers in Cellular and Infection Microbiology (2025)</div></div>
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Invited Member, Board of Studies — Dept. of Biotechnology, Woxsen University (2023)</div></div>
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Organized ACM Summer School on "Algorithmic Techniques in Computational Biology" — IIT Hyderabad, June 2023</div></div>
+        <div class="ach-item"><div class="ach-num">✓</div><div class="ach-text">Organized Workshop on "Computational Oncology: Modeling and Experiments" — IIT Hyderabad, December 2024</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TALKS -->
+<section id="talks">
+  <div class="shead fade-in"><div class="slabel">Outreach</div><h2 class="stitle">Invited <em>Talks</em></h2></div>
+  <div class="talk-list fade-in">
+    <div class="talk-item"><div class="talk-year">2025</div><div><div class="talk-title">"Systems biology approaches to identify metabolic enzyme targets in diseases"</div><div class="talk-venue">FDP on Recent Frontiers in Disease Biology — Amity University Haryana, Gurugram · July 21-25, 2025</div></div></div>
+    <div class="talk-item"><div class="talk-year">2025</div><div><div class="talk-title">"Merging machine learning with systems biology to discover essential enzymes in metabolic networks"</div><div class="talk-venue">Discussion Meeting on ML for Molecular Sciences (ML4Science) — Shillong · February 6-9, 2025 (TIFR Hyderabad)</div></div></div>
+    <div class="talk-item"><div class="talk-year">2024</div><div><div class="talk-title">"Dissecting metabolic adaptations of proliferating cells using systems biology: A story about endothelial cells"</div><div class="talk-venue">Workshop on Computational Oncology: Modeling and Experiments — IIT Hyderabad · December 9-10, 2024</div></div></div>
+    <div class="talk-item"><div class="talk-year">2024</div><div><div class="talk-title">"Exploring the metabolic mechanisms of endothelial cells in angiogenesis: A systems biology perspective"</div><div class="talk-venue">Emerging Trends in Translational Bioinformatics (ET2B) — BIT Mesra · December 5-7, 2024</div></div></div>
+    <div class="talk-item"><div class="talk-year">2024</div><div><div class="talk-title">"Modeling molecular networks of microeukaryotic parasites"</div><div class="talk-venue">Computational Systems Biology Meeting — IIT Madras · July 12-13, 2024</div></div></div>
+    <div class="talk-item"><div class="talk-year">2024</div><div><div class="talk-title">"Machine learning approaches to discover metabolic gene targets: A systems biology perspective" (Plenary Talk)</div><div class="talk-venue">International Conference on Global Collaboration in Pharmaceuticals — JSS College of Pharmacy, Ooty · March 15-17, 2024</div></div></div>
+    <div class="talk-item"><div class="talk-year">2023</div><div><div class="talk-title">"Systems biology approaches to dissect metabolic adaptations in biological systems"</div><div class="talk-venue">International Conference One Health: Biotechnology as Catalyst — JSS AHER, Mysuru · December 7-9, 2023</div></div></div>
+    <div class="talk-item"><div class="talk-year">2023</div><div><div class="talk-title">"Unearthing the metabolic basis of angiogenesis: A systems biology perspective"</div><div class="talk-venue">Modelling and Tackling Complex Biological Systems — Institute of Mathematical Sciences, Chennai · October 13-14, 2023</div></div></div>
+    <div class="talk-item"><div class="talk-year">2023</div><div><div class="talk-title">"Making sense of the whole: Computational systems biology approaches to decipher metabolic mechanisms"</div><div class="talk-venue">ACM Summer School — IIT Hyderabad · June 14-24, 2023</div></div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COLLABORATORS -->
+<section id="collab">
+  <div class="shead fade-in"><div class="slabel">Network</div><h2 class="stitle">Collaborators &amp; <em>Partners</em></h2></div>
+  <div class="collab-grid fade-in">
+    <div class="ccard"><div class="cinst">VIB-KU Leuven, Belgium</div><div class="cname">Prof. Peter Carmeliet</div><div class="cdept">Center for Cancer Biology · Vascular Biology</div></div>
+    <div class="ccard"><div class="cinst">CSIR-NCL, Pune</div><div class="cname">Dr. Ram Rup Sarkar</div><div class="cdept">Systems Biology · Computational Biology</div></div>
+    <div class="ccard"><div class="cinst">IIT Hyderabad</div><div class="cname">CSE &amp; AI Departments</div><div class="cdept">ACM Summer School · Collaborative Research</div></div>
+    <div class="ccard"><div class="cinst">DBT, Govt. of India</div><div class="cname">Funding Agency</div><div class="cdept">Ramalingaswami Re-entry Fellowship</div></div>
+    <div class="ccard"><div class="cinst">ICMR</div><div class="cname">Funding Agency</div><div class="cdept">JRF Fellowship · ICMR Supported Research</div></div>
+    <div class="ccard"><div class="cinst">JSS AHER, Mysuru</div><div class="cname">Research Collaboration</div><div class="cdept">M.Sc. Students · Invited Talks</div></div>
+    <div class="ccard"><div class="cinst">NIT Warangal</div><div class="cname">Student Exchange</div><div class="cdept">IITH SURE Summer Internship Program</div></div>
+    <div class="ccard"><div class="cinst">IISER Mohali</div><div class="cname">Student Exchange</div><div class="cdept">Research Internship Collaboration</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-grid">
+    <div class="fade-in">
+      <div class="slabel">Get in Touch</div>
+      <h2 class="stitle" style="margin-bottom:26px">Contact <em>Us</em></h2>
+      <form class="contact-form" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="fgroup"><label class="flabel">First Name</label><input type="text" class="finput" placeholder="Your first name" required></div>
+          <div class="fgroup"><label class="flabel">Last Name</label><input type="text" class="finput" placeholder="Your last name"></div>
+        </div>
+        <div class="fgroup"><label class="flabel">Email Address</label><input type="email" class="finput" placeholder="you@institute.ac.in" required></div>
+        <div class="fgroup"><label class="flabel">Subject</label>
+          <select class="finput" style="cursor:pointer">
+            <option>Prospective PhD Student</option>
+            <option>Prospective M.Tech Student</option>
+            <option>Project / Internship Inquiry</option>
+            <option>Research Collaboration</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fgroup"><label class="flabel">Message</label><textarea class="ftextarea" placeholder="Briefly describe your background, research interests, and what you're looking for..." required></textarea></div>
+        <button type="submit" class="fsubmit" id="submitBtn">Send Message</button>
+      </form>
+    </div>
+    <div class="contact-info fade-in">
+      <div class="cblock">
+        <h3>Join Our Lab</h3>
+        <p>We are always looking for motivated Ph.D., M.Tech., and project students with backgrounds in Biotechnology, Bioinformatics, Computer Science, or related disciplines. We welcome out-of-the-box, unconventional thinking. Email Dr. Abhishek Subramanian directly!</p>
+      </div>
+      <div class="citems">
+        <div class="citem"><div class="citem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><div><div class="citem-label">Address</div><div class="citem-val">Dept. of Biotechnology, IIT Hyderabad<br>Kandi, Sangareddy, Telangana – 502284</div></div></div>
+        <div class="citem"><div class="citem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div><div><div class="citem-label">Email</div><div class="citem-val"><a href="mailto:abhisheks@bt.iith.ac.in">abhisheks@bt.iith.ac.in</a></div></div></div>
+        <div class="citem"><div class="citem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg></div><div><div class="citem-label">Lab Website</div><div class="citem-val"><a href="https://sites.google.com/bt.iith.ac.in/comp-bio-abhishek/home" target="_blank">Official Google Site ↗</a></div></div></div>
+        <div class="citem"><div class="citem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3b6d11" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div><div><div class="citem-label">Vidwan Profile</div><div class="citem-val"><a href="https://iith.irins.org/profile/335214" target="_blank">iith.irins.org/profile/335214 ↗</a></div></div></div>
+      </div>
+      <div class="funding-box">
+        <div class="slabel" style="color:var(--a700);margin-bottom:10px">Funding &amp; Acknowledgements</div>
+        <p style="font-size:13px;color:var(--a800);line-height:1.7">Supported by DBT Ramalingaswami Re-entry Fellowship, ICMR, MoE (Ministry of Education), and IIT Hyderabad Institute funds. We thank all our funding agencies for enabling cutting-edge computational biology research.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fbrand"><span>Biological Networks &amp; Systems Biology Lab</span><span>Indian Institute of Technology Hyderabad · Est. January 2023</span></div>
+  <div class="flinks">
+    <a href="#about">About</a><a href="#research">Research</a><a href="#team">Team</a>
+    <a href="#publications">Publications</a><a href="#achievements">Awards</a>
+    <a href="#talks">Talks</a><a href="#contact">Contact</a>
+  </div>
+  <div class="fright">© 2025 BNSB Lab, IIT Hyderabad<br><span>Dr. Abhishek Subramanian</span></div>
+</footer>
+
+<script>
+// Canvas animation
+const canvas = document.getElementById('bioCanvas');
+const ctx = canvas.getContext('2d');
+let W,H,nodes=[],edges=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+function initNodes(){
+  nodes=[];edges=[];
+  const count=Math.min(Math.floor((W*H)/22000),55);
+  for(let i=0;i<count;i++) nodes.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*3.5+2,vx:(Math.random()-0.5)*0.28,vy:(Math.random()-0.5)*0.28,type:Math.random()>0.75?'hub':'regular',phase:Math.random()*Math.PI*2,color:Math.random()>0.5?'green':'amber'});
+  for(let i=0;i<nodes.length;i++){const k=nodes[i].type==='hub'?4:2;for(let j=0;j<k;j++){const t=Math.floor(Math.random()*nodes.length);if(t!==i)edges.push([i,t])}}
+}
+initNodes();
+function draw(t){
+  ctx.clearRect(0,0,W,H);
+  for(const[a,b]of edges){const na=nodes[a],nb=nodes[b];const dist=Math.hypot(na.x-nb.x,na.y-nb.y);if(dist>280)continue;const alpha=(1-dist/280)*0.25;ctx.beginPath();ctx.moveTo(na.x,na.y);ctx.lineTo(nb.x,nb.y);ctx.strokeStyle=`rgba(99,153,34,${alpha})`;ctx.lineWidth=0.7;ctx.stroke()}
+  for(const n of nodes){n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;const pulse=Math.sin(t*0.0008+n.phase)*0.5+0.5;ctx.beginPath();ctx.arc(n.x,n.y,n.r+(n.type==='hub'?2:0)*pulse,0,Math.PI*2);const isA=n.color==='amber';const alpha=n.type==='hub'?0.6:0.3+pulse*0.2;ctx.fillStyle=isA?`rgba(186,117,23,${alpha})`:`rgba(99,153,34,${alpha})`;ctx.fill();if(n.type==='hub'){ctx.beginPath();ctx.arc(n.x,n.y,(n.r+5)*pulse,0,Math.PI*2);ctx.strokeStyle=isA?`rgba(186,117,23,${0.15*pulse})`:`rgba(99,153,34,${0.15*pulse})`;ctx.lineWidth=1;ctx.stroke()}}
+  requestAnimationFrame(draw)
+}
+requestAnimationFrame(draw);
+
+// Scroll effects
+const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting)el.target.classList.add('visible')})},{threshold:0.08});
+document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>50));
+
+// Publication filter
+function filterPubs(cat,btn){
+  document.querySelectorAll('.pfbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pitem').forEach(p=>{
+    if(cat==='all'||p.dataset.cat===cat) p.classList.remove('hidden');
+    else p.classList.add('hidden');
+  });
+}
+
+// Contact form
+function handleSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  btn.textContent='Sending...';btn.style.opacity='0.7';btn.disabled=true;
+  setTimeout(()=>{btn.textContent='✓ Message Sent!';btn.style.background='var(--g600)';
+    setTimeout(()=>{btn.textContent='Send Message';btn.style.opacity='1';btn.style.background='var(--g800)';btn.disabled=false;e.target.reset()},3000)},1200);
+}
+</script>
+</body>
+</html>

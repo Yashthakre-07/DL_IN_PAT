@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - PAT-IQA Analysis Engine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary": "#545c72",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#fffbff",
+                      "inverse-on-surface": "#eff1f3",
+                      "primary-container": "#2170e4",
+                      "secondary-container": "#6063ee",
+                      "on-primary-fixed": "#001a42",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#727785",
+                      "surface-container-low": "#f2f4f6",
+                      "background": "#f7f9fb",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed": "#e1e0ff",
+                      "on-tertiary-fixed": "#131b2e",
+                      "on-surface": "#191c1e",
+                      "tertiary-container": "#6c748b",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-background": "#191c1e",
+                      "error": "#ba1a1a",
+                      "on-primary": "#ffffff",
+                      "secondary": "#4648d4",
+                      "on-tertiary-container": "#fefcff",
+                      "primary": "#0058be",
+                      "surface-variant": "#e0e3e5",
+                      "on-primary-container": "#fefcff",
+                      "surface": "#f7f9fb",
+                      "on-tertiary-fixed-variant": "#3f465c",
+                      "inverse-surface": "#2d3133",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#dae2fd",
+                      "on-error": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "surface-container": "#eceef0",
+                      "primary-fixed": "#d8e2ff",
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-primary-fixed-variant": "#004395",
+                      "surface-container-high": "#e6e8ea",
+                      "surface-tint": "#005ac2",
+                      "surface-dim": "#d8dadc",
+                      "on-secondary-fixed": "#07006c",
+                      "surface-bright": "#f7f9fb",
+                      "tertiary-fixed-dim": "#bec6e0",
+                      "inverse-primary": "#adc6ff",
+                      "outline-variant": "#c2c6d6",
+                      "on-surface-variant": "#424754"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-padding": "24px",
+                      "panel-gap": "16px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "sidebar-width": "260px",
+                      "grid-columns": "12"
+              },
+              "fontFamily": {
+                      "display-xl": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-base": ["Inter"],
+                      "mono-data": ["JetBrains Mono"],
+                      "h3": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "h2": ["Inter"],
+                      "h1": ["Inter"]
+              },
+              "fontSize": {
+                      "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+                      "body-base": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+                      "mono-data": ["12px", {"lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500"}],
+                      "h3": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600"}],
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "h2": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "h1": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-surface dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col py-container-padding z-50">
+<div class="px-container-padding mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+</div>
+<div>
+<div class="font-h2 text-h2 font-bold text-primary dark:text-primary-fixed">PAT-IQA Research</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">System v2.4.1</div>
+</div>
+</div>
+<div class="px-container-padding mb-6">
+<button class="w-full bg-primary text-on-primary font-body-base text-body-base py-2 px-4 rounded shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-[inset_0_2px_0_0_rgba(255,255,255,0.2)]">
+                Run New Analysis
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">compare_arrows</span>
+                Comparator
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">model_training</span>
+                Training
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+                Dataset Browser
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">memory</span>
+                System Health
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-primary dark:text-primary-fixed font-bold border-r-2 border-primary bg-primary-fixed/20 opacity-80 duration-150 font-body-base text-body-base" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto px-4 pt-4 border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+                Docs
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant font-body-base text-body-base hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="ml-sidebar-width bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-40 flex justify-between items-center px-container-padding h-14">
+<div class="flex items-center gap-6">
+<div class="font-h3 text-h3 font-semibold text-on-surface dark:text-on-surface">PAT-IQA Analysis Engine</div>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<nav class="flex items-center gap-4">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-sm text-body-sm hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Breadcrumbs</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-sm text-body-sm hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Global Search</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded border border-outline-variant">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="font-mono-data text-mono-data text-on-surface">CUDA: Active</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded border border-outline-variant">
+<span class="font-mono-data text-mono-data text-on-surface">GPU: 84%</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<img alt="Researcher Avatar" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A close-up, professional portrait of a medical researcher in a clinical setting. The lighting is bright and clear, reflecting a modern, high-tech healthcare environment. The subject is well-lit, emphasizing their professional demeanor. The background is a soft, sterile white, maintaining a clean and focused aesthetic suitable for an avatar in a complex clinical web application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyOSBLz5TlrJ_SxmixqCpBlUroonkV8vr4YShRiDmrGvY3H0KBBbT7y8O-OlrtI6ELc3KgdyvcXIxxbD58LwTm6ED74n2UKYMFiF7L176zFAWm2vIzkh_Ik25eb_m0RUG8Tsoq0xOk2Vnsz79AVuK5OvkTSdH1Zvz-M7VzY3JLOK__NFNJvdqDOanqpEn8542_-a3seT-0nlrqfiKYmYGhmMmtzuSZ4yXnho_jqZEelvKvTguZ2K4lLoB3sZj1PvE_FdEwaBx_E9Y"/>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-sidebar-width p-container-padding">
+<div class="max-w-6xl mx-auto space-y-8">
+<div class="mb-8">
+<h1 class="font-h1 text-h1 text-on-surface mb-2">Settings &amp; Configuration</h1>
+<p class="font-body-base text-body-base text-on-surface-variant">Manage environment variables, hardware allocations, and system integrations.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Environment Setup -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant bg-surface-container-lowest/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">folder_managed</span>
+<h2 class="font-h3 text-h3 text-on-surface">Environment Setup</h2>
+</div>
+<div class="p-5 space-y-5">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Dataset Root Directory</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface border-outline-variant text-on-surface font-mono-data text-mono-data rounded focus:ring-primary focus:border-primary px-3 py-2 border shadow-sm" readonly="" type="text" value="/mnt/storage/medical_datasets/pat_iqa_v2"/>
+<button class="px-4 py-2 bg-surface-container-low border border-outline-variant rounded hover:bg-surface-container-high transition-colors font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_0_0_rgba(255,255,255,0.5)]">Browse</button>
+</div>
+<p class="text-[12px] text-on-surface-variant mt-1 font-body-sm">Path to the primary storage volume containing raw DICOM files.</p>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Model Export Directory</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface border-outline-variant text-on-surface font-mono-data text-mono-data rounded focus:ring-primary focus:border-primary px-3 py-2 border shadow-sm" readonly="" type="text" value="/opt/models/pat_iqa/checkpoints"/>
+<button class="px-4 py-2 bg-surface-container-low border border-outline-variant rounded hover:bg-surface-container-high transition-colors font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_0_0_rgba(255,255,255,0.5)]">Browse</button>
+</div>
+<p class="text-[12px] text-on-surface-variant mt-1 font-body-sm">Destination for serialized weights and inference logs.</p>
+</div>
+</div>
+</section>
+<!-- GPU Configuration -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant bg-surface-container-lowest/50 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">memory_alt</span>
+<h2 class="font-h3 text-h3 text-on-surface">GPU Configuration</h2>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full font-label-caps text-label-caps">2 DEVICES FOUND</span>
+</div>
+<div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- GPU Card 1 -->
+<div class="border border-outline-variant rounded-lg p-4 bg-surface relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-primary-fixed opacity-20 rounded-bl-full -mr-4 -mt-4"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-mono-data text-mono-data text-primary font-bold">GPU 0</span>
+<span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
+</div>
+<div class="font-h3 text-h3 text-on-surface">NVIDIA A100-SXM4</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">developer_board</span>
+</div>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between font-mono-data text-mono-data text-on-surface-variant mb-1">
+<span>VRAM Usage</span>
+<span>32.4 / 40.0 GB</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 81%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center border-t border-outline-variant pt-2 mt-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Temperature</span>
+<span class="font-mono-data text-mono-data text-error">78°C</span>
+</div>
+</div>
+</div>
+<!-- GPU Card 2 -->
+<div class="border border-outline-variant rounded-lg p-4 bg-surface relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-primary-fixed opacity-20 rounded-bl-full -mr-4 -mt-4"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-mono-data text-mono-data text-primary font-bold">GPU 1</span>
+<span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
+</div>
+<div class="font-h3 text-h3 text-on-surface">NVIDIA A100-SXM4</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">developer_board</span>
+</div>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between font-mono-data text-mono-data text-on-surface-variant mb-1">
+<span>VRAM Usage</span>
+<span>12.1 / 40.0 GB</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5">
+<div class="bg-secondary h-1.5 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center border-t border-outline-variant pt-2 mt-2">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Temperature</span>
+<span class="font-mono-data text-mono-data text-on-surface">62°C</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column -->
+<div class="lg:col-span-4 space-y-6">
+<!-- System Versioning -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant bg-surface-container-lowest/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<h2 class="font-h3 text-h3 text-on-surface">System Details</h2>
+</div>
+<div class="p-0">
+<table class="w-full text-left">
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-5 font-body-sm text-body-sm text-on-surface-variant">Core Engine</td>
+<td class="py-3 px-5 font-mono-data text-mono-data text-on-surface text-right">PAT-IQA v2.4.1</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-5 font-body-sm text-body-sm text-on-surface-variant">PyTorch Base</td>
+<td class="py-3 px-5 font-mono-data text-mono-data text-on-surface text-right">2.1.0+cu118</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-5 font-body-sm text-body-sm text-on-surface-variant">CUDA Toolkit</td>
+<td class="py-3 px-5 font-mono-data text-mono-data text-on-surface text-right">11.8.89</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-5 font-body-sm text-body-sm text-on-surface-variant">Next.js UI</td>
+<td class="py-3 px-5 font-mono-data text-mono-data text-on-surface text-right">14.1.0</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-3 px-5 font-body-sm text-body-sm text-on-surface-variant">FastAPI Relay</td>
+<td class="py-3 px-5 font-mono-data text-mono-data text-on-surface text-right">0.109.2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- API & Webhooks -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant bg-surface-container-lowest/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">api</span>
+<h2 class="font-h3 text-h3 text-on-surface">API Integrations</h2>
+</div>
+<div class="p-5 space-y-4">
+<div>
+<div class="flex justify-between items-center mb-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Clinical Endpoint URL</label>
+<span class="bg-error-container text-on-error-container px-1.5 py-0.5 rounded text-[10px] font-bold">SECRET</span>
+</div>
+<input class="w-full bg-surface border-outline-variant text-on-surface font-mono-data text-mono-data rounded focus:ring-primary focus:border-primary px-3 py-2 border shadow-sm" type="password" value="https://api.internal-hospital.org/v1/relay"/>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="font-body-base text-body-base text-on-surface font-medium">Auto-Sync Results</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Push AI predictions to EHR</span>
+</div>
+<button class="w-10 h-6 bg-primary rounded-full relative transition-colors shadow-sm focus:outline-none">
+<span class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+</button>
+</div>
+<div class="pt-4 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 bg-surface-container-low border border-outline-variant py-2 rounded text-on-surface font-body-sm text-body-sm hover:bg-surface-container-high transition-colors shadow-[inset_0_2px_0_0_rgba(255,255,255,0.5)]">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+                                    Rotate API Keys
+                                </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex justify-end gap-3 pt-6 border-t border-outline-variant">
+<button class="px-6 py-2 bg-surface-container-lowest border border-outline-variant rounded font-body-base text-body-base text-on-surface hover:bg-surface-container-low transition-colors shadow-[inset_0_2px_0_0_rgba(255,255,255,0.5)]">
+                    Discard Changes
+                </button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded font-body-base text-body-base hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-[inset_0_2px_0_0_rgba(255,255,255,0.2)]">
+                    Save Configuration
+                </button>
+</div>
+</div>
+</main>
+</body></html>

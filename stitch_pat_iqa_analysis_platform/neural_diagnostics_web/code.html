@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neural Diagnostics - Inference &amp; Explainability</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#545c72",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-container": "#2170e4",
+                        "secondary-container": "#6063ee",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#727785",
+                        "surface-container-low": "#f2f4f6",
+                        "background": "#f7f9fb",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-tertiary-fixed": "#131b2e",
+                        "on-surface": "#191c1e",
+                        "tertiary-container": "#6c748b",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "secondary": "#4648d4",
+                        "on-tertiary-container": "#fefcff",
+                        "primary": "#0058be",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-container": "#fefcff",
+                        "surface": "#f7f9fb",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "surface-container": "#eceef0",
+                        "primary-fixed": "#d8e2ff",
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-tint": "#005ac2",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed": "#07006c",
+                        "surface-bright": "#f7f9fb",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "inverse-primary": "#adc6ff",
+                        "outline-variant": "#c2c6d6",
+                        "on-surface-variant": "#424754"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "24px",
+                        "panel-gap": "16px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "sidebar-width": "260px",
+                        "grid-columns": "12"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-base": ["Inter"],
+                        "mono-data": ["JetBrains Mono"],
+                        "h3": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "body-base": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "mono-data": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "500" }],
+                        "h3": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            outline: none;
+            border-radius: 2px;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #0058be;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .gauge-arc {
+            stroke-dasharray: 283;
+            stroke-dashoffset: 40; /* Adjust for 85% */
+            transition: stroke-dashoffset 1s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="bg-surface border-r border-outline-variant w-sidebar-width h-screen fixed left-0 top-0 flex flex-col py-container-padding z-50">
+<div class="px-container-padding mb-8 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">P</div>
+<div>
+<h2 class="font-h2 text-h2 font-bold text-primary">PAT-IQA Research</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">System v2.4.1</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-body-base text-body-base">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">compare_arrows</span>
+<span class="font-body-base text-body-base">Comparator</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">model_training</span>
+<span class="font-body-base text-body-base">Training</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-primary font-bold border-r-2 border-primary bg-primary-fixed/20 opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+<span class="font-body-base text-body-base">Dataset Browser</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">memory</span>
+<span class="font-body-base text-body-base">System Health</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-body-base text-body-base">Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-4">
+<button class="w-full bg-primary text-on-primary py-2 rounded-lg font-body-base text-body-base font-semibold shadow-sm hover:bg-primary/90 transition-colors border-t border-white/20 flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Run New Analysis
+            </button>
+<div class="pt-4 border-t border-outline-variant/50 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">description</span>
+<span class="font-body-sm text-body-sm">Docs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+<span class="font-body-sm text-body-sm">Support</span>
+</a>
+</div>
+<div class="flex items-center gap-3 px-3 py-2">
+<img alt="User Medical Profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A close-up portrait of a medical researcher wearing sterile clinical attire. The lighting is bright and high-key, reflecting a modern, sterile healthcare environment. The overall aesthetic is professional, clean, and clinical, utilizing a cool color palette with crisp whites and subtle clinical blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2SU-Nf3V8DwzrxOSGqaM6wymYNCG5xAEv4XPhjVhROhBRqzfvl8FvhYohJsJQ7iydn2yAa52PiYnBzzbSpYHoDot3zHfsSv7aaobvUPrDQ-oDhvy1BAz7foe4Kb8UoHyITBBtfJsv6D9rb6XbFDuu01W9Yw5ZkpkIbJjzftG5xJp73Tpm86CrLSF2PlOToQTLeNHyuhHd9wGtCvT24assbA2dP1e9Tqd0u1pyIxyXuduMTvxQnmkynEf3-RDBuDDI-BetPaptCuk"/>
+<span class="font-body-sm text-body-sm font-medium">Dr. S. Chen</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[260px] flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-container-padding h-14 sticky top-0 z-40">
+<div class="flex items-center gap-6">
+<h1 class="font-h3 text-h3 font-semibold text-on-surface">PAT-IQA Analysis Engine</h1>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-4">
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Breadcrumbs</a>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border-none rounded-md pl-8 pr-3 py-1 font-body-sm text-body-sm focus:ring-1 focus:ring-primary w-48 text-on-surface placeholder:text-on-surface-variant/70" placeholder="Global Search" type="text"/>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 mr-4 border-r border-outline-variant pr-4">
+<span class="flex items-center gap-1.5 bg-secondary-container/10 text-secondary-container px-2 py-1 rounded-md font-mono-data text-mono-data">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+                        CUDA: Active
+                    </span>
+<span class="flex items-center gap-1.5 bg-surface-container-high px-2 py-1 rounded-md font-mono-data text-mono-data text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+                        GPU: 84%
+                    </span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Viewport Workspace -->
+<div class="flex-1 overflow-y-auto p-container-padding bg-background">
+<div class="grid grid-cols-12 gap-gutter h-full min-h-[700px]">
+<!-- Left Column: Input & Controls (3 cols) -->
+            <div class="col-span-3 flex flex-col gap-panel-gap h-full">
+                <!-- Upload Zone -->
+                <div class="glass-panel rounded-xl p-4 flex flex-col flex-1">
+                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-surface-container-highest">
+                        <span class="material-symbols-outlined text-[20px] text-primary">upload_file</span>
+                        <h3 class="font-h3 text-h3 text-on-surface">Photoacoustic Input</h3>
+                    </div>
+                    <input type="file" id="imageInput" class="hidden" accept="image/*">
+                    <div id="uploadZone" class="flex-1 border-2 border-dashed border-outline-variant/50 rounded-lg bg-surface-container-low/50 flex flex-col items-center justify-center p-6 text-center hover:bg-surface-container-low hover:border-primary/50 transition-all cursor-pointer group">
+                        <div class="w-12 h-12 rounded-full bg-surface shadow-sm flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-[24px] text-tertiary">image_search</span>
+                        </div>
+                        <p class="font-body-base text-body-base font-medium mb-1">Drop DICOM or TIFF</p>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Max size 250MB per slice</p>
+                        <button id="browseBtn" class="bg-surface border border-outline-variant px-4 py-1.5 rounded-md font-body-sm text-body-sm font-medium hover:border-primary hover:text-primary transition-colors">Browse Files</button>
+                    </div>
+                    <div id="filePreview" class="hidden mt-4 p-2 bg-surface-container rounded-lg flex items-center justify-between">
+                        <span class="text-body-sm truncate" id="fileNameDisplay">No file selected</span>
+                        <span class="material-symbols-outlined text-emerald-500 text-[18px]">check_circle</span>
+                    </div>
+                    <div class="mt-4 space-y-3">
+                        <div class="flex justify-between items-center text-body-sm">
+                            <span class="text-on-surface-variant">Current Set:</span>
+                            <span id="currentSetLabel" class="font-mono-data bg-surface-container px-2 py-0.5 rounded">None</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Action Panel -->
+                <div class="glass-panel rounded-xl p-4 shrink-0">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Pipeline Configuration</span>
+                        <span class="material-symbols-outlined text-[16px] text-outline">tune</span>
+                    </div>
+                    <div class="space-y-4 mb-5">
+                        <div>
+                            <label class="font-body-sm text-body-sm text-on-surface-variant block mb-1">Pre-processing</label>
+                            <select class="w-full bg-surface border border-outline-variant rounded-md font-body-sm text-body-sm p-2 focus:ring-1 focus:ring-primary focus:border-primary">
+                                <option>Standard Denoise (Wavelet)</option>
+                                <option>Aggressive Filter</option>
+                                <option>Raw Input</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-body-sm text-body-sm text-on-surface-variant block mb-1">Model Backbone</label>
+                            <select id="modelSelect" class="w-full bg-surface border border-outline-variant rounded-md font-body-sm text-body-sm p-2 focus:ring-1 focus:ring-primary focus:border-primary">
+                                <option value="paqnet">PAQNet v2 (Recommended)</option>
+                                <option value="efficientnet">EfficientNet-B4</option>
+                                <option value="iqdcnn">IQDCNN</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="predictBtn" class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-h3 text-h3 font-semibold shadow-sm hover:bg-primary/90 transition-colors border-t border-white/20 flex justify-center items-center gap-2 relative overflow-hidden">
+                        <span id="btnShimmer" class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></span>
+                        <span id="btnIcon" class="material-symbols-outlined text-[20px]">psychiatry</span>
+                        <span id="btnText">Predict Quality</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Center Column: Visualizer (6 cols) -->
+            <div class="col-span-6 flex flex-col h-full glass-panel rounded-xl soft-shadow overflow-hidden">
+                <!-- Vis Header -->
+                <div class="px-4 py-3 border-b border-surface-container-highest flex justify-between items-center bg-surface/50">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-[20px] text-tertiary">visibility</span>
+                        <h3 class="font-h3 text-h3 text-on-surface">Explainability Canvas</h3>
+                        <span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded-full font-label-caps text-[10px] tracking-wider uppercase ml-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[12px]">auto_awesome</span> Grad-CAM
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Zoom In"><span class="material-symbols-outlined text-[18px]">zoom_in</span></button>
+                        <button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Reset View"><span class="material-symbols-outlined text-[18px]">fit_screen</span></button>
+                        <button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant transition-colors" title="Export"><span class="material-symbols-outlined text-[18px]">download</span></button>
+                    </div>
+                </div>
+                <!-- Main Visualization Area -->
+                <div class="flex-1 bg-[#1a1b26] relative overflow-hidden flex items-center justify-center p-4">
+                    <!-- Image with Heatmap Overlay -->
+                    <div id="visContainer" class="relative w-full max-w-lg aspect-square border border-white/10 rounded shadow-2xl bg-black">
+                        <img id="baseImg" alt="Base Medical Scan" class="w-full h-full object-contain grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYTW76_54C2uK-spoOnrkapSEbKyvNmUo7FgpXnR09slpYD94PZN32TS50seUvsK8FqTcTiDyKjYfG_lKm_Ek0vCaemUq9p4yWmK8j6a_y30WqPEbEkkr82phpHbjYnwyD2MYdJ8ujK9Gq73B1vPElX9WBcg1rpzekVtPE103EeJ6HrZYgf0m9EkqAcfrKFf04HvjblDGI9KftDEL13WmJgB39ZCDeYupk84mYIRJKQ4P3-OckZjXpygx7r3p1UTJM19wq4MhJ4HM"/>
+                        <!-- Grad-CAM Overlay -->
+                        <img id="heatmapImg" class="absolute inset-0 w-full h-full object-contain mix-blend-screen opacity-70 hidden" src=""/>
+                        <!-- Bounding Box / Marker -->
+                        <div id="roiMarker" class="absolute top-[30%] left-[50%] w-32 h-32 border-2 border-dashed border-error rounded-sm hidden">
+                            <div class="absolute -top-6 -left-0.5 bg-error text-on-error font-mono-data text-[10px] px-1 py-0.5 rounded-sm">ROI_Primary</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Visualization Controls -->
+                <div class="p-4 bg-surface border-t border-surface-container-highest">
+                    <div class="flex items-center gap-6">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Heatmap Opacity</label>
+                                <span id="opacityValue" class="font-mono-data text-[11px] text-tertiary">70%</span>
+                            </div>
+                            <input id="opacitySlider" class="range-slider" max="100" min="0" type="range" value="70"/>
+                        </div>
+                        <div class="w-px h-8 bg-outline-variant"></div>
+                        <div class="flex-1">
+                            <label class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-1 block">Activation Layer</label>
+                            <div class="flex gap-2">
+                                <button class="flex-1 py-1 px-2 text-center rounded bg-surface-container-highest font-body-sm text-body-sm text-on-surface hover:bg-outline-variant transition-colors">Conv4_block1</button>
+                                <button class="flex-1 py-1 px-2 text-center rounded bg-primary-fixed text-on-primary-fixed-variant font-body-sm text-body-sm font-medium border border-primary/20">Conv5_block3</button>
+                                <button class="flex-1 py-1 px-2 text-center rounded bg-surface-container-highest font-body-sm text-body-sm text-on-surface hover:bg-outline-variant transition-colors">FC_Out</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Right Column: Results & Metrics (3 cols) -->
+            <div class="col-span-3 flex flex-col gap-panel-gap h-full overflow-y-auto pr-1">
+                <!-- Confidence Score Gauge -->
+                <div class="glass-panel rounded-xl p-5 text-center flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
+                    <h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-4">Overall Quality Score</h3>
+                    <div class="relative w-32 h-32 mb-2">
+                        <!-- SVG Gauge -->
+                        <svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+                            <circle cx="50" cy="50" fill="none" r="45" stroke="#e2e8f0" stroke-dasharray="283" stroke-dashoffset="0" stroke-width="8"></circle>
+                            <circle id="gaugeArc" class="gauge-arc" cx="50" cy="50" fill="none" r="45" stroke="#0058be" stroke-linecap="round" stroke-width="8" style="stroke-dashoffset: 283;"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="font-display-xl text-display-xl text-on-surface"><span id="scoreDisplay">--</span><span class="text-h3">%</span></span>
+                        </div>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 bg-surface-container-low px-3 py-1 rounded-full border border-outline-variant/30">
+                        <span id="qualityIndicator" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        <span id="qualityText" class="font-body-sm text-body-sm font-medium text-on-surface-variant">Awaiting Inference</span>
+                    </div>
+                </div>
+                <!-- Model Comparison Bento -->
+                <div class="glass-panel rounded-xl flex-1 flex flex-col">
+                    <div class="px-4 py-3 border-b border-surface-container-highest flex justify-between items-center">
+                        <h3 class="font-h3 text-h3 text-on-surface">Model Benchmarks</h3>
+                        <span class="material-symbols-outlined text-[18px] text-tertiary">analytics</span>
+                    </div>
+                    <div class="p-4 space-y-4 flex-1">
+                        <!-- Primary Model Stat -->
+                        <div class="p-3 rounded-lg bg-surface border border-outline-variant relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-body-sm text-body-sm font-semibold">PAQNet v2</span>
+                                    <span class="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-mono-data">ACTIVE</span>
+                                </div>
+                                <span class="font-mono-data text-mono-data font-bold">0.92 F1</span>
+                            </div>
+                            <div class="w-full bg-surface-container-high rounded-full h-1.5 mb-1">
+                                <div class="bg-primary h-1.5 rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_BASE = "http://localhost:8000/api/v1";
+    
+    // Elements
+    const uploadZone = document.getElementById('uploadZone');
+    const imageInput = document.getElementById('imageInput');
+    const predictBtn = document.getElementById('predictBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const gaugeArc = document.getElementById('gaugeArc');
+    const heatmapImg = document.getElementById('heatmapImg');
+    const baseImg = document.getElementById('baseImg');
+    const opacitySlider = document.getElementById('opacitySlider');
+    const opacityValue = document.getElementById('opacityValue');
+    const qualityText = document.getElementById('qualityText');
+    const qualityIndicator = document.getElementById('qualityIndicator');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const filePreview = document.getElementById('filePreview');
+    const currentSetLabel = document.getElementById('currentSetLabel');
+    const modelSelect = document.getElementById('modelSelect');
+    const roiMarker = document.getElementById('roiMarker');
+    
+    let selectedFile = null;
+
+    // Handle Upload Zone
+    const browseBtn = document.getElementById('browseBtn');
+    uploadZone.addEventListener('click', () => imageInput.click());
+    browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        imageInput.click();
+    });
+    
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('border-primary');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('border-primary');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('border-primary');
+        if (e.dataTransfer.files.length > 0) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+    
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        selectedFile = file;
+        fileNameDisplay.textContent = file.name;
+        currentSetLabel.textContent = file.name;
+        filePreview.classList.remove('hidden');
+        
+        // Show preview in baseImg
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            baseImg.src = e.target.result;
+            heatmapImg.classList.add('hidden');
+            roiMarker.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Predict Action
+    predictBtn.addEventListener('click', async () => {
+        if (!selectedFile) {
+            alert("Please select an image first.");
+            return;
+        }
+        
+        setLoading(true);
+        
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        formData.append('model_name', modelSelect.value);
+        formData.append('weight_file', 'best_paqnet.pth'); 
+
+        try {
+            const response = await fetch(`${API_BASE}/inference/diagnose`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error("Inference failed");
+            
+            const data = await response.json();
+            updateResults(data);
+        } catch (err) {
+            console.error(err);
+            alert("Error running diagnostics: " + err.message);
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    function setLoading(isLoading) {
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        if (isLoading) {
+            btnText.textContent = "Processing...";
+            btnIcon.textContent = "hourglass_empty";
+            predictBtn.disabled = true;
+            predictBtn.classList.add('opacity-70');
+        } else {
+            btnText.textContent = "Predict Quality";
+            btnIcon.textContent = "psychiatry";
+            predictBtn.disabled = false;
+            predictBtn.classList.remove('opacity-70');
+        }
+    }
+
+    function updateResults(data) {
+        const score = Math.round(data.score * 100);
+        scoreDisplay.textContent = score;
+        
+        // Update Gauge
+        const offset = 283 - (283 * (score / 100));
+        gaugeArc.style.strokeDashoffset = offset;
+        
+        // Update Quality Indicator
+        if (score > 80) {
+            qualityIndicator.className = "w-2 h-2 rounded-full bg-emerald-500";
+            qualityText.textContent = "High Diagnostic Quality";
+        } else if (score > 50) {
+            qualityIndicator.className = "w-2 h-2 rounded-full bg-amber-500";
+            qualityText.textContent = "Marginal Quality";
+        } else {
+            qualityIndicator.className = "w-2 h-2 rounded-full bg-error";
+            qualityText.textContent = "Low Quality - Rescan Recommended";
+        }
+        
+        // Show Heatmap
+        if (data.heatmap_base64) {
+            heatmapImg.src = `data:image/png;base64,${data.heatmap_base64}`;
+            heatmapImg.classList.remove('hidden');
+            roiMarker.classList.remove('hidden');
+        }
+    }
+
+    // Opacity Slider
+    opacitySlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        opacityValue.textContent = `${val}%`;
+        heatmapImg.style.opacity = val / 100;
+    });
+
+    // Navigation
+    document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const text = link.textContent.trim().toLowerCase();
+            if (text.includes('dashboard')) window.location.href = '../pat_iqa_research_dashboard/code.html';
+            if (text.includes('comparator')) window.location.href = '../analytical_comparator_web/code.html';
+            if (text.includes('training')) window.location.href = '../ai_training_studio_web/code.html';
+        });
+    });
+</script>
+</body></html>

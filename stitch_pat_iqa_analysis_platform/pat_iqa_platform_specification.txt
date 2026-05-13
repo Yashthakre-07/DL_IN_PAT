@@ -1,0 +1,34 @@
+# PAT-IQA Platform Specification
+
+## Project Overview
+PAT-IQA (Photoacoustic Image Quality Assessment Platform) is a production-grade web platform for medical and research-grade photoacoustic image analysis. It combines classical analytical metrics with state-of-the-art AI training and diagnostics.
+
+## Core Modules & Screens
+
+### 1. Central Dashboard
+- **Purpose**: High-level overview of system health, recent experiments, and quick actions.
+- **Key Features**: GPU monitoring, recent training status, metric summaries, and navigation to sub-modules.
+
+### 2. Analytical Comparator (Module 1)
+- **Purpose**: Compare reconstructed PAT images against ground truth using classical metrics.
+- **Key Features**: Dual upload zones, split-screen viewer with heatmap overlays, and a comprehensive metrics dashboard (PSNR, SSIM, etc.).
+
+### 3. AI Training Studio (Module 2)
+- **Purpose**: No-code interface for training custom PAT quality assessment networks.
+- **Key Features**: Dataset manager, model selection cards (PAQNet, ResNet, etc.), real-time training monitor with loss/validation curves, and an experiment tracker.
+
+### 4. Neural Diagnostics (Module 3)
+- **Purpose**: Inference and explainability for trained models.
+- **Key Features**: Single/batch inference, Grad-CAM heatmap visualization, multi-model comparison, and confidence scoring.
+
+### 5. Model Vault
+- **Purpose**: Repository for trained weights and metadata.
+- **Key Features**: Version control for .pth files, metadata display, and weight downloads.
+
+### 6. Settings & Configuration
+- **Purpose**: Local environment setup and GPU/CUDA detection management.
+
+## Technical Architecture (Localhost)
+- **Frontend**: Next.js (App Router), Tailwind CSS, shadcn/ui, Framer Motion, Recharts.
+- **Backend**: FastAPI, PyTorch, Celery, Redis.
+- **Theme**: Premium Light Mode (Apple/Vercel/Linear aesthetic).
