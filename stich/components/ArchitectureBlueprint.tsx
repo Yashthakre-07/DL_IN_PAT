@@ -13,7 +13,8 @@ import {
     DatabaseIcon,
     ChevronDownIcon,
     ShapesIcon,
-    BinaryIcon
+    BinaryIcon,
+    XIcon
 } from "lucide-react";
 
 interface Layer {
@@ -93,6 +94,20 @@ const architectures = {
             { type: 'fc', label: 'Regression Head', details: '128 Units, ReLU', description: 'Task-specific head for image quality scoring.' },
             { type: 'output', label: 'Final Output', details: 'Scalar Quality Index', description: 'Regression output for objective assessment.' },
         ] as Layer[]
+    },
+    pixeldl: {
+        id: 'pixeldl',
+        title: "Pixel-DL",
+        subtitle: "Physics-Informed Model",
+        summary: "Integrates wave propagation physics with dense neural networks for artifact removal.",
+        layers: [
+            { type: 'input', label: 'Channel Map', details: '64x128x128', description: 'Pixel-interpolated data from 64 sensors.' },
+            { type: 'block', label: 'Dense Entry', details: 'Block k=8', description: 'Initial dense feature processing.' },
+            { type: 'pool', label: 'Pooling', details: 'MaxPool 2x2', description: 'Spatial reduction.' },
+            { type: 'block', label: 'Bottleneck', details: 'Deep Latent Space', description: 'Deepest feature representation.' },
+            { type: 'block', label: 'Restoration', details: 'Synthesis', description: 'Upsampling and detail recovery.' },
+            { type: 'output', label: 'Reconstructed', details: 'Residual Map', description: 'Final photoacoustic image output.' }
+        ] as Layer[]
     }
 };
 
@@ -110,7 +125,7 @@ const layerTypeMeta = {
 
 export default function ArchitectureBlueprint() {
     const [selectedModel, setSelectedModel] = useState<keyof typeof architectures>('paqnet');
-    const [hoveredLayer, setHoveredLayer] = useState<number | null>(null);
+    const [activeLayer, setActiveLayer] = useState<number | null>(null);
 
     const model = architectures[selectedModel];
 
@@ -140,6 +155,12 @@ export default function ArchitectureBlueprint() {
                     >
                         EfficientNet
                     </button>
+                    <button 
+                        onClick={() => setSelectedModel('pixeldl')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${selectedModel === 'pixeldl' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                    >
+                        PixelDL
+                    </button>
                 </div>
             </div>
 
@@ -148,12 +169,12 @@ export default function ArchitectureBlueprint() {
                     {model.layers.map((layer, idx) => (
                         <div key={idx} className="flex flex-col items-center w-full">
                             <motion.div
-                                onMouseEnter={() => setHoveredLayer(idx)}
-                                onMouseLeave={() => setHoveredLayer(null)}
-                                whileHover={{ scale: 1.02, x: 10 }}
+                                onClick={() => setActiveLayer(activeLayer === idx ? null : idx)}
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.98 }}
                                 className={`
-                                    w-full h-24 rounded-3xl border-4 flex items-center justify-between px-8 cursor-help transition-all duration-300 relative
-                                    ${hoveredLayer === idx ? "border-slate-900 bg-white shadow-xl -translate-y-1 z-10" : `border-slate-50 ${layerTypeMeta[layer.type].bg}`}
+                                    w-full h-24 rounded-3xl border-4 flex items-center justify-between px-8 cursor-pointer transition-all duration-300 relative
+                                    ${activeLayer === idx ? "border-slate-900 bg-white shadow-xl -translate-y-1 z-10" : `border-slate-50 ${layerTypeMeta[layer.type].bg}`}
                                 `}
                             >
                                 <div className="flex items-center gap-6">
@@ -183,26 +204,34 @@ export default function ArchitectureBlueprint() {
                 </div>
             </div>
 
-            {/* Hover Tooltip Overlay */}
+            {/* Click Tooltip Overlay */}
             <AnimatePresence>
-                {hoveredLayer !== null && (
+                {activeLayer !== null && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute bottom-6 left-6 right-6 p-6 bg-slate-900 text-white rounded-[32px] shadow-2xl z-20"
+                        className="absolute bottom-6 left-6 right-6 p-6 bg-slate-900 text-white rounded-[32px] shadow-2xl z-20 border-2 border-white/10"
                     >
-                        <div className="flex items-center gap-4 mb-2">
-                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/10`}>
-                                {(() => {
-                                    const Meta = layerTypeMeta[model.layers[hoveredLayer].type];
-                                    return <Meta.icon className="w-4 h-4 text-white" />;
-                                })()}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-white/10`}>
+                                    {(() => {
+                                        const Meta = layerTypeMeta[model.layers[activeLayer].type];
+                                        return <Meta.icon className="w-4 h-4 text-white" />;
+                                    })()}
+                                </div>
+                                <h5 className="font-black text-lg">{model.layers[activeLayer].label}</h5>
                             </div>
-                            <h5 className="font-black text-lg">{model.layers[hoveredLayer].label}</h5>
+                            <button 
+                                onClick={() => setActiveLayer(null)}
+                                className="text-slate-400 hover:text-white transition-colors"
+                            >
+                                <XIcon className="w-5 h-5" />
+                            </button>
                         </div>
                         <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
-                            "{model.layers[hoveredLayer].description}"
+                            "{model.layers[activeLayer].description}"
                         </p>
                     </motion.div>
                 )}

@@ -140,6 +140,13 @@ function DiagnosticsContent({ models, error, setError }: { models: any[], error:
                                         <option value="paqnet">PAQNet Core</option>
                                         <option value="iqdcnn">IQDCNN Multi</option>
                                         <option value="efficientnet">EfficientNet-B0</option>
+                                        <option value="unet">U-Net Architecture</option>
+                                        <option value="fdunet">FD-UNet Architecture</option>
+                                        <option value="pixeldl">Pixel-DL Physics</option>
+                                        <option value="ynet">Y-Net Dual-Input</option>
+                                        <option value="fdynet">FD-YNet Dense Fusion</option>
+                                        <option value="pixelgan">PixelGAN Adversarial</option>
+                                        <option value="pixelcgan">PixelCGAN Conditional</option>
                                     </select>
                                 </div>
 

@@ -17,86 +17,247 @@ import {
     InfoIcon,
     MoveRightIcon,
     BinaryIcon,
-    ShapesIcon
+    ShapesIcon,
+    SparklesIcon,
+    ShieldCheckIcon,
+    X as XIcon
 } from "lucide-react";
 import Link from 'next/link';
 
 interface Layer {
-    type: 'input' | 'conv' | 'relu' | 'pool' | 'flatten' | 'fc' | 'dropout' | 'output' | 'block';
+    type: 'input' | 'conv' | 'relu' | 'pool' | 'flatten' | 'fc' | 'dropout' | 'output' | 'block' | 'upconv';
     label: string;
     details: string;
     description: string;
+    isHorizontal?: boolean;
 }
 
-const architectures = {
+const architectures: Record<string, any> = {
+    unet: {
+        id: 'unet',
+        title: "U-Net",
+        subtitle: "Classic Symmetric Network",
+        summary: "The foundational U-shaped architecture featuring contracting and expanding paths with skip connections.",
+        isUshaped: true,
+        layers: [
+            { type: 'input', label: 'Input Image', details: '1x572x572', description: 'Raw input tensor.' },
+            { type: 'conv', label: 'Conv Block 1', details: '2x Conv 3x3, 64', description: 'First stage feature extraction.' },
+            { type: 'pool', label: 'Max Pool 1', details: 'MaxPool 2x2', description: 'Spatial dimension reduction.' },
+            { type: 'conv', label: 'Conv Block 2', details: '2x Conv 3x3, 128', description: 'Second stage feature extraction.' },
+            { type: 'pool', label: 'Max Pool 2', details: 'MaxPool 2x2', description: 'Spatial dimension reduction.' },
+            { type: 'conv', label: 'Conv Block 3', details: '2x Conv 3x3, 256', description: 'Third stage feature extraction.' },
+            { type: 'pool', label: 'Max Pool 3', details: 'MaxPool 2x2', description: 'Spatial dimension reduction.' },
+            { type: 'conv', label: 'Conv Block 4', details: '2x Conv 3x3, 512', description: 'Fourth stage feature extraction.' },
+            { type: 'pool', label: 'Max Pool 4', details: 'MaxPool 2x2', description: 'Final spatial reduction to bottleneck.' },
+            { type: 'block', label: 'Bottleneck', details: '2x Conv 3x3, 1024', description: 'The deepest feature representation layer.' },
+            { type: 'upconv', label: 'Up-Conv 4', details: 'ConvTranspose 2x2, 512', description: 'First upsampling step.' },
+            { type: 'conv', label: 'Conv Block 4', details: 'Concat + 2x Conv 3x3', description: 'Feature synthesis with skip connection.' },
+            { type: 'upconv', label: 'Up-Conv 3', details: 'ConvTranspose 2x2, 256', description: 'Second upsampling step.' },
+            { type: 'conv', label: 'Conv Block 3', details: 'Concat + 2x Conv 3x3', description: 'Feature synthesis with skip connection.' },
+            { type: 'upconv', label: 'Up-Conv 2', details: 'ConvTranspose 2x2, 128', description: 'Third upsampling step.' },
+            { type: 'conv', label: 'Conv Block 2', details: 'Concat + 2x Conv 3x3', description: 'Feature synthesis with skip connection.' },
+            { type: 'upconv', label: 'Up-Conv 1', details: 'ConvTranspose 2x2, 64', description: 'Final upsampling step.' },
+            { type: 'conv', label: 'Conv Block 1', details: 'Concat + 2x Conv 3x3', description: 'Final feature synthesis.' },
+            { type: 'output', label: 'Output Map', details: 'Conv 1x1', description: 'Final segmentation or artifact map output.' }
+        ] as Layer[]
+    },
+    fdunet: {
+        id: 'fdunet',
+        title: "FD-UNet",
+        subtitle: "Fully Dense U-Net",
+        summary: "Specialized U-Net architecture with dense connectivity for 2D sparse photoacoustic tomography artifact removal.",
+        isUshaped: true,
+        layers: [
+            { type: 'input', label: 'Input Image', details: '1x128x128', description: 'Reconstructed PA image with artifacts.' },
+            { type: 'block', label: 'Dense Block 1', details: 'k=8, Output: 64', description: 'First dense block extracting multi-scale features.' },
+            { type: 'pool', label: 'Transition Down 1', details: 'MaxPool 64x64', description: 'Spatial reduction to 64x64.' },
+            { type: 'block', label: 'Dense Block 2', details: 'k=8, Output: 96', description: 'Second dense block.' },
+            { type: 'pool', label: 'Transition Down 2', details: 'MaxPool 32x32', description: 'Spatial reduction to 32x32.' },
+            { type: 'block', label: 'Dense Block 3', details: 'k=8, Output: 128', description: 'Third dense block.' },
+            { type: 'pool', label: 'Transition Down 3', details: 'MaxPool 16x16', description: 'Spatial reduction to 16x16.' },
+            { type: 'block', label: 'Dense Block 4', details: 'k=8, Output: 160', description: 'Fourth dense block.' },
+            { type: 'pool', label: 'Transition Down 4', details: 'MaxPool 8x8', description: 'Spatial reduction to 8x8.' },
+            { type: 'block', label: 'Bottleneck', details: 'Dense Block k=8', description: 'The deepest feature representation at 8x8 resolution.' },
+            { type: 'upconv', label: 'Up-Conv 4', details: 'ConvTranspose 16x16', description: 'Upsampling step 4.' },
+            { type: 'block', label: 'Dense Block 4', details: 'k=8', description: 'Fourth dense block in expanding path.' },
+            { type: 'upconv', label: 'Up-Conv 3', details: 'ConvTranspose 32x32', description: 'Upsampling step 3.' },
+            { type: 'block', label: 'Dense Block 3', details: 'k=8', description: 'Third expanding dense block.' },
+            { type: 'upconv', label: 'Up-Conv 2', details: 'ConvTranspose 64x64', description: 'Upsampling step 2.' },
+            { type: 'block', label: 'Dense Block 2', details: 'k=8', description: 'Second expanding dense block.' },
+            { type: 'upconv', label: 'Up-Conv 1', details: 'ConvTranspose 128x128', description: 'Upsampling step 1.' },
+            { type: 'block', label: 'Dense Block 1', details: 'k=8', description: 'First expanding dense block.' },
+            { type: 'output', label: 'Global Residual', details: 'y = Λθ(x) + x', description: 'Identity mapping for artifact suppression.' }
+        ] as Layer[]
+    },
+    attention_unet: {
+        id: 'attention_unet',
+        title: "Attention U-Net",
+        subtitle: "Gated Feature Fusion",
+        summary: "Enhanced U-Net with integrated attention gates that highlight salient features while suppressing irrelevant background noise.",
+        isUshaped: true,
+        layers: [
+            { type: 'input', label: 'Input Image', details: '1x256x256', description: 'Input PA image for attention-guided refinement.' },
+            { type: 'conv', label: 'Encoder 1', details: '32 Filters', description: 'Initial feature map generation.' },
+            { type: 'pool', label: 'Down 1', details: 'Stride 2', description: 'Spatial reduction.' },
+            { type: 'conv', label: 'Encoder 2', details: '64 Filters', description: 'Deep feature extraction.' },
+            { type: 'pool', label: 'Down 2', details: 'Stride 2', description: 'Spatial reduction.' },
+            { type: 'conv', label: 'Encoder 3', details: '128 Filters', description: 'Latent feature extraction.' },
+            { type: 'pool', label: 'Down 3', details: 'Stride 2', description: 'Spatial reduction.' },
+            { type: 'conv', label: 'Encoder 4', details: '256 Filters', description: 'Deepest features before bottleneck.' },
+            { type: 'pool', label: 'Down 4', details: 'Stride 2', description: 'Final reduction.' },
+            { type: 'block', label: 'Attention Core', details: 'Gated Unit', description: 'Central bottleneck with global attention mechanism.' },
+            { type: 'upconv', label: 'Up 4', details: 'Transpose 256', description: 'First stage of expansion.' },
+            { type: 'block', label: 'Attention Gate 4', details: 'α-Weighting', description: 'Suppressing irrelevant skip features.' },
+            { type: 'upconv', label: 'Up 3', details: 'Transpose 128', description: 'Second stage of expansion.' },
+            { type: 'block', label: 'Attention Gate 3', details: 'α-Weighting', description: 'Focusing on structural edges.' },
+            { type: 'upconv', label: 'Up 2', details: 'Transpose 64', description: 'Third stage of expansion.' },
+            { type: 'block', label: 'Attention Gate 2', details: 'α-Weighting', description: 'Detail recovery guidance.' },
+            { type: 'upconv', label: 'Up 1', details: 'Transpose 32', description: 'Final expansion.' },
+            { type: 'block', label: 'Attention Gate 1', details: 'α-Weighting', description: 'Final feature selection.' },
+            { type: 'output', label: 'Attentive Map', details: 'Softmax Output', description: 'Precision-mapped reconstruction output.' }
+        ] as Layer[]
+    },
     paqnet: {
         id: 'paqnet',
-        title: "PAQNet",
+        title: "PAQNet Core",
         subtitle: "Photoacoustic Quality Network",
         summary: "Specialized CNN architecture for regression-based image quality assessment in photoacoustic tomography.",
         layers: [
-            { type: 'input', label: 'Input Source', details: '1x128x128 Grayscale Tensor', description: 'The raw reconstructed photoacoustic image is normalized and fed into the network as a single-channel spatial tensor.' },
-            { type: 'conv', label: 'Conv2D Block 1', details: '5x5 Kernel, 32 Filters, Padding 2', description: 'Primary feature extraction using a large receptive field (5x5) to capture initial structural patterns and edge artifacts.' },
-            { type: 'relu', label: 'ReLU Activation', details: 'Non-linear mapping', description: 'Applies the Rectified Linear Unit activation function, introducing non-linearity to allow the model to learn complex mapping functions.' },
-            { type: 'pool', label: 'Max Pooling 1', details: '2x2 Window, Output: 32x64x64', description: 'Downsamples the feature maps by taking the maximum value in 2x2 windows, reducing spatial dimensionality and computation.' },
-            { type: 'conv', label: 'Conv2D Block 2', details: '3x3 Kernel, 64 Filters, Padding 1', description: 'Second-level feature extraction focused on more complex structural features with an increased filter count.' },
-            { type: 'relu', label: 'ReLU Activation', details: 'Non-linear mapping', description: 'Introduces further non-linearity after the second convolutional stage.' },
-            { type: 'pool', label: 'Max Pooling 2', details: '2x2 Window, Output: 64x32x32', description: 'Continued spatial reduction to focus the network on higher-level semantic features.' },
-            { type: 'conv', label: 'Conv2D Block 3', details: '3x3 Kernel, 128 Filters, Padding 1', description: 'Deep feature extraction targeting high-frequency artifacts common in limited-view tomography.' },
-            { type: 'relu', label: 'ReLU Activation', details: 'Non-linear mapping', description: 'Ensures neurons only fire for significant feature activations at deep layers.' },
-            { type: 'pool', label: 'Max Pooling 3', details: '2x2 Window, Output: 128x16x16', description: 'Reduces feature maps to a compact spatial representation before the final convolution stage.' },
-            { type: 'conv', label: 'Conv2D Block 4', details: '3x3 Kernel, 256 Filters, Padding 1', description: 'Final high-capacity convolutional block extracting the most abstract representations of image quality.' },
-            { type: 'relu', label: 'ReLU Activation', details: 'Non-linear mapping', description: 'Final non-linear processing of the convolutional output.' },
-            { type: 'pool', label: 'Max Pooling 4', details: '2x2 Window, Output: 256x8x8', description: 'Final pooling before flattening. The output is a highly distilled 256-channel 8x8 representation.' },
-            { type: 'flatten', label: 'Flatten Vector', details: '16,384 Feature Units', description: 'Converts the 3D feature tensor (256x8x8) into a 1D vector to prepare for the fully connected decision layers.' },
-            { type: 'fc', label: 'Dense Stage 1', details: '128 Neurons, ReLU', description: 'First fully connected layer that combines global features to begin the final regression process.' },
-            { type: 'dropout', label: 'Dropout Regularizer', details: 'Rate: 0.3', description: 'Randomly zeros 30% of activations during training to prevent overfitting and improve generalization.' },
-            { type: 'fc', label: 'Dense Stage 2', details: '128 Neurons, ReLU', description: 'Second dense layer refining the feature vector before final output.' },
-            { type: 'dropout', label: 'Dropout Regularizer', details: 'Rate: 0.3', description: 'Additional regularization to ensure robust quality scoring.' },
-            { type: 'output', label: 'Regression Head', details: '1 Output Neuron (Linear)', description: 'The final neuron produces a single continuous scalar value representing the predicted quality score of the image.' },
+            { type: 'input', label: 'Input Source', details: '1x128x128 Grayscale Tensor', description: 'The raw reconstructed photoacoustic image is normalized and fed into the network.' },
+            { type: 'conv', label: 'Conv2D Block 1', details: '5x5 Kernel, 32 Filters', description: 'Primary feature extraction using a large receptive field.' },
+            { type: 'relu', label: 'ReLU Activation', details: 'Non-linear mapping', description: 'Introduces non-linearity to the feature maps.' },
+            { type: 'pool', label: 'Max Pooling 1', details: '2x2 Window', description: 'Spatial dimension reduction.' },
+            { type: 'conv', label: 'Conv2D Block 2', details: '3x3 Kernel, 64 Filters', description: 'Second-level feature extraction.' },
+            { type: 'pool', label: 'Max Pooling 2', details: '2x2 Window', description: 'Continued spatial reduction.' },
+            { type: 'conv', label: 'Conv2D Block 3', details: '3x3 Kernel, 128 Filters', description: 'Deep feature extraction.' },
+            { type: 'pool', label: 'Max Pooling 3', details: '2x2 Window', description: 'High-level feature condensation.' },
+            { type: 'flatten', label: 'Flatten Vector', details: 'Vectorization', description: 'Converts 3D tensor to 1D vector.' },
+            { type: 'fc', label: 'Dense Stage 1', details: '128 Neurons', description: 'Global feature combination.' },
+            { type: 'dropout', label: 'Dropout', details: 'Rate: 0.3', description: 'Prevents overfitting.' },
+            { type: 'output', label: 'Regression Head', details: '1 Output Neuron', description: 'Produces the final estimated quality score.' }
+        ] as Layer[]
+    },
+    ynet: {
+        id: 'ynet',
+        title: "Y-Net Fusion",
+        subtitle: "Dual-Input Fusion Network",
+        summary: "An innovative architecture featuring two distinct encoder branches for image spatial and raw signal temporal features.",
+        isYshaped: true,
+        layers: [
+            { type: 'input', label: 'Image Input', details: '1x128x128', description: 'Primary spatial input containing initial reconstruction.' },
+            { type: 'conv', label: 'Image Encoder 1', details: '32 Filters, 3x3', description: 'Spatial feature extraction from image branch.' },
+            { type: 'pool', label: 'Image MaxPool', details: '2x2 Stride 2', description: 'Downsampling spatial features.' },
+            { type: 'input', label: 'Signal Input', details: '64x512', description: 'Time-series pressure data captured by detectors.' },
+            { type: 'conv', label: 'Signal Encoder 1', details: '32 Filters, 3x3', description: 'Extracting temporal patterns and wave signatures.' },
+            { type: 'pool', label: 'Signal MaxPool', details: '2x2 Stride 2', description: 'Spatial reduction of signal features.' },
+            { type: 'block', label: 'Feature Fusion', details: 'Concat (64 feat)', description: 'Point where image and signal features merge.' },
+            { type: 'conv', label: 'Fused Conv', details: '64 Filters, 3x3', description: 'Refining the fused multi-modal representation.' },
+            { type: 'upconv', label: 'Restoration Up', details: 'Transpose Conv', description: 'Upsampling back to the image domain.' },
+            { type: 'output', label: 'Final Output', details: '1x128x128', description: 'High-fidelity reconstruction leveraging dual priors.' }
+        ] as Layer[]
+    },
+    fdynet: {
+        id: 'fdynet',
+        title: "FD-YNet Dense",
+        subtitle: "Fully Dense Y-Net",
+        summary: "Advanced Y-Net utilizing dense block connectivity in both branches for maximum feature reuse and gradient flow.",
+        isYshaped: true,
+        layers: [
+            { type: 'input', label: 'Image Input', details: '1x128x128', description: 'Spatial prior input.' },
+            { type: 'block', label: 'Dense Img Block', details: 'k=8, 4 Layers', description: 'Dense spatial feature extraction.' },
+            { type: 'pool', label: 'Img Transition', details: 'MaxPool 2x2', description: 'Spatial compression.' },
+            { type: 'input', label: 'Signal Input', details: '64x512', description: 'Raw temporal signal input.' },
+            { type: 'block', label: 'Dense Sig Block', details: 'k=8, 4 Layers', description: 'Dense temporal feature extraction.' },
+            { type: 'pool', label: 'Sig Transition', details: 'MaxPool 2x2', description: 'Signal compression.' },
+            { type: 'block', label: 'Dense Fusion', details: 'Concatenation', description: 'Merging dense features from both domains.' },
+            { type: 'conv', label: 'Synthesis Conv', details: '64 Filters', description: 'Joint domain synthesis.' },
+            { type: 'upconv', label: 'Dense Restore', details: 'k=8 Up', description: 'Final restoration stage.' },
+            { type: 'output', label: 'Reconstruction', details: '1x128x128', description: 'Final denoised and artifact-free PAT image.' }
+        ] as Layer[]
+    },
+    pixeldl: {
+        id: 'pixeldl',
+        title: "Pixel-DL",
+        subtitle: "Physics-Informed Reconstruction",
+        summary: "Deep learning model that integrates wave propagation physics with dense backbones for high-fidelity reconstruction.",
+        isUshaped: true,
+        layers: [
+            { type: 'input', label: 'Pixel Channel Map', details: '64x128x128', description: 'Initial set of 64 pixel-interpolated channel maps.' },
+            { type: 'block', label: 'Dense Entry', details: 'Block k=8', description: 'Initial dense processing of multi-channel data.' },
+            { type: 'pool', label: 'Down-Trans 1', details: 'MaxPool 64x64', description: 'Spatial condensation of interpolated features.' },
+            { type: 'block', label: 'Dense Block 2', details: 'k=8', description: 'Deep feature extraction on compressed latent space.' },
+            { type: 'pool', label: 'Down-Trans 2', details: 'MaxPool 32x32', description: 'Continued hierarchical reduction.' },
+            { type: 'block', label: 'Pixel Bottleneck', details: 'Dense Block k=8', description: 'Distilled deep representation of acoustic source.' },
+            { type: 'upconv', label: 'Up-Conv 1', details: 'Transpose 64x64', description: 'Detail recovery stage.' },
+            { type: 'upconv', label: 'Up-Conv 2', details: 'Transpose 128x128', description: 'Final reconstruction stage.' },
+            { type: 'output', label: 'PAT Output', details: 'Residual Mapping', description: 'Final artifact-free photoacoustic image.' }
+        ] as Layer[]
+    },
+    pixelgan: {
+        id: 'pixelgan',
+        title: "PixelGAN",
+        subtitle: "Adversarial Pixel Optimizer",
+        summary: "A generative adversarial network designed for pixel-level enhancement and artifact suppression.",
+        layers: [
+            { type: 'input', label: 'Input/Noise', details: '1x128x128', description: 'Starting tensor for pixel generation.' },
+            { type: 'conv', label: 'Encoder 1', details: '4x4 Conv, Stride 2', description: 'Initial spatial compression.' },
+            { type: 'conv', label: 'Encoder 2', details: '4x4 Conv, Stride 2', description: 'Deep feature encoding.' },
+            { type: 'block', label: 'Adversarial Core', details: 'ResNet Bottleneck', description: 'Convergence of generator and discriminator signals.' },
+            { type: 'upconv', label: 'Decoder 1', details: 'Transpose 4x4', description: 'Restoring spatial resolution.' },
+            { type: 'output', label: 'Generated Map', details: 'Tanh Head', description: 'Enhanced output image with reduced noise.' }
+        ] as Layer[]
+    },
+    pixelcgan: {
+        id: 'pixelcgan',
+        title: "PixelCGAN",
+        subtitle: "Conditional Pixel GAN",
+        summary: "Conditional GAN that leverages prior information for high-fidelity guided reconstruction.",
+        layers: [
+            { type: 'input', label: 'Source + Condition', details: '2-Channel Concat', description: 'Input source and conditioning information merged.' },
+            { type: 'conv', label: 'Cond-Encoder', details: 'Conv 4x4', description: 'Joint encoding of source and priors.' },
+            { type: 'block', label: 'Feature Fusion', details: 'Dense Fusion', description: 'Integrates conditional features with learned latent space.' },
+            { type: 'upconv', label: 'Cond-Decoder', details: 'Transpose 4x4', description: 'Reconstructing guided details.' },
+            { type: 'output', label: 'Conditional Map', details: 'Sigmoid Head', description: 'Final reconstruction adhering to input conditions.' }
+        ] as Layer[]
+    },
+    cycle_pat: {
+        id: 'cycle_pat',
+        title: "Cycle-PAT",
+        subtitle: "Unpaired Domain GAN",
+        summary: "Cycle-consistent adversarial network for unsupervised translation between sparse and dense PAT domains.",
+        layers: [
+            { type: 'input', label: 'Source Image', details: '1x128x128 Sparse', description: 'Input image from the source domain.' },
+            { type: 'conv', label: 'Domain Encoder', details: '7x7 Conv, 64', description: 'Initial domain encoding.' },
+            { type: 'block', label: 'Identity Core', details: '9x Residual', description: 'Identity-preserving feature transformations.' },
+            { type: 'upconv', label: 'Domain Decoder', details: 'Transpose 64', description: 'Upsampling back to target domain.' },
+            { type: 'output', label: 'Target Output', details: '1x128x128 Dense', description: 'Translated image in the target domain.' }
         ] as Layer[]
     },
     iqdcnn: {
         id: 'iqdcnn',
         title: "IQDCNN",
         subtitle: "Deep Image Quality CNN",
-        summary: "A high-capacity deep convolutional network optimized for broad-spectrum structural distortion analysis.",
+        summary: "High-capacity deep convolutional network optimized for broad-spectrum structural analysis.",
         layers: [
-            { type: 'input', label: 'Input Source', details: '1x128x128 Tensor', description: 'Standard input format for grayscale tomography images.' },
-            { type: 'conv', label: 'Primary Conv', details: '5x5 Kernel, 32 Filters', description: 'Initial convolution focused on broad spatial features.' },
-            { type: 'pool', label: 'Max Pooling 1', details: '3x3 Window, Stride 2', description: 'First downsampling step using a larger 3x3 window.' },
-            { type: 'conv', label: 'Deep Conv 1', details: '5x5 Kernel, 32 Filters', description: 'Repetitive convolutional blocks to deepen the hierarchy.' },
-            { type: 'pool', label: 'Max Pooling 2', details: '3x3 Window, Stride 2', description: 'Sequential spatial reduction.' },
-            { type: 'conv', label: 'Deep Conv 2', details: '5x5 Kernel, 32 Filters', description: 'Capturing mid-level structural features.' },
-            { type: 'pool', label: 'Max Pooling 3', details: '3x3 Window, Stride 2', description: 'Third pooling stage.' },
-            { type: 'conv', label: 'Deep Conv 3', details: '5x5 Kernel, 32 Filters', description: 'Extracting deep feature correlations.' },
-            { type: 'pool', label: 'Max Pooling 4', details: '3x3 Window, Stride 2', description: 'Final spatial condensation.' },
-            { type: 'flatten', label: 'Flatten', details: 'Feature Aggregation', description: 'Vectorizing the latent space representation.' },
-            { type: 'fc', label: 'Dense 1024', details: '1024 Units, ReLU', description: 'Extremely high capacity dense layer for detailed feature mapping.' },
-            { type: 'dropout', label: 'Dropout Stage', details: 'Rate: 0.3', description: 'Standard regularization.' },
-            { type: 'fc', label: 'Dense 1024', details: '1024 Units, ReLU', description: 'Second deep dense layer.' },
-            { type: 'dropout', label: 'Dropout Stage', details: 'Rate: 0.3', description: 'Sequential regularization.' },
-            { type: 'output', label: 'Final Output', details: 'Regression Scalar', description: 'Produces the final objective quality metric.' },
+            { type: 'input', label: 'Input Source', details: '1x128x128', description: 'Standard input format for grayscale images.' },
+            { type: 'conv', label: 'Primary Conv', details: '5x5 Kernel', description: 'Broad spatial feature capture.' },
+            { type: 'pool', label: 'Pooling', details: '3x3 Window', description: 'Large-window spatial reduction.' },
+            { type: 'flatten', label: 'Vectorization', details: 'Global Pool', description: 'Compressing features for decision head.' },
+            { type: 'fc', label: 'Dense Stage', details: '1024 Units', description: 'High-capacity mapping layer.' },
+            { type: 'output', label: 'Quality Scalar', details: 'Linear Regressor', description: 'Produces final objective metric.' }
         ] as Layer[]
     },
     efficientnet: {
         id: 'efficientnet',
         title: "EfficientNet-B0",
         subtitle: "Scaled Feature Extractor",
-        summary: "Leverages compound scaling and MBConv blocks for high-efficiency image quality assessment.",
+        summary: "Leverages compound scaling and MBConv blocks for high-efficiency assessment.",
         layers: [
-            { type: 'input', label: 'Input Source', details: '1x128x128 Grayscale', description: 'Input adapted for grayscale photoacoustic data.' },
-            { type: 'conv', label: 'Stem Conv', details: '3x3, Stride 2, 32 Filters', description: 'Initial feature projection into the EfficientNet space.' },
-            { type: 'block', label: 'MBConv Stage 1', details: 'Inverted Residual + SE', description: 'Efficient bottleneck block with squeeze-and-excitation attention.' },
-            { type: 'block', label: 'MBConv Stage 2', details: 'Expansion: 6, Stride 2', description: 'Dimensional expansion to capture complex features efficiently.' },
-            { type: 'block', label: 'MBConv Stage 3', details: 'Expansion: 6', description: 'Intermediate feature refinement block.' },
-            { type: 'block', label: 'MBConv Stage 4', details: 'Expansion: 6, Stride 2', description: 'High-level feature abstraction stage.' },
-            { type: 'block', label: 'MBConv Stage 5', details: 'Expansion: 6', description: 'Near-bottleneck feature processing.' },
-            { type: 'block', label: 'MBConv Stage 6', details: 'Expansion: 6, Stride 2', description: 'Final deep feature extraction blocks.' },
-            { type: 'conv', label: 'Final Conv', details: '1x1 Conv, 1280 Filters', description: 'Projects extracted features into a high-dimensional space.' },
-            { type: 'pool', label: 'Global Average Pool', details: 'Global Feature Pooling', description: 'Collapses spatial dimensions into a single feature vector.' },
-            { type: 'fc', label: 'Regression Head', details: '128 Units, ReLU', description: 'Task-specific head for image quality scoring.' },
-            { type: 'output', label: 'Final Output', details: 'Scalar Quality Index', description: 'Regression output for objective assessment.' },
+            { type: 'input', label: 'Input Source', details: '1x128x128', description: 'Grayscale photoacoustic data input.' },
+            { type: 'conv', label: 'Stem Conv', details: '3x3, Stride 2', description: 'Initial projection to feature space.' },
+            { type: 'block', label: 'MBConv Stage', details: 'Expansion: 6', description: 'Efficient inverted residual bottleneck.' },
+            { type: 'pool', label: 'Global Average', details: 'GAP Layer', description: 'Collapses spatial dimensions.' },
+            { type: 'output', label: 'Regression Head', details: 'Linear Head', description: 'Task-specific quality scoring.' }
         ] as Layer[]
     }
 };
@@ -110,267 +271,512 @@ const layerTypeMeta = {
     fc: { icon: HashIcon, bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-900", accent: "bg-amber-400", subtext: "Dense", gradient: "from-amber-400 to-amber-600" },
     dropout: { icon: EraserIcon, bg: "bg-slate-50", border: "border-slate-200", text: "text-slate-900", accent: "bg-slate-300", subtext: "Regularizer", gradient: "from-slate-300 to-slate-500" },
     output: { icon: ZapIcon, bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-900", accent: "bg-blue-400", subtext: "Output", gradient: "from-blue-400 to-blue-600" },
-    block: { icon: CpuIcon, bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-900", accent: "bg-cyan-400", subtext: "MB Block", gradient: "from-cyan-400 to-cyan-600" }
+    upconv: { icon: ActivityIcon, bg: "bg-lime-50", border: "border-lime-200", text: "text-lime-900", accent: "bg-lime-400", subtext: "Up-Conv", gradient: "from-lime-400 to-lime-600" },
+    block: { icon: CpuIcon, bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-900", accent: "bg-cyan-400", subtext: "Block Unit", gradient: "from-cyan-400 to-cyan-600" }
 };
 
 export default function ArchitecturePage() {
+    const [view, setView] = useState<'list' | 'details'>('list');
     const [selectedModel, setSelectedModel] = useState<keyof typeof architectures>('paqnet');
-    const [hoveredLayer, setHoveredLayer] = useState<number | null>(null);
+    const [activeLayer, setActiveLayer] = useState<number | null>(null);
 
     const model = architectures[selectedModel];
 
+    const renderLayer = (layer: any, idx: number, isCompact: boolean = false, isUshapeRight: boolean = false, indent: number = 0, isHorizontal: boolean = false) => (
+        <div key={`${selectedModel}-${idx}`} className={`flex flex-col ${isUshapeRight ? 'items-end' : 'items-start'} ${isHorizontal ? 'w-auto flex-shrink-0' : 'w-full'}`} style={{ paddingLeft: !isHorizontal && isCompact && !isUshapeRight ? `${indent * 40}px` : 0, paddingRight: !isHorizontal && isCompact && isUshapeRight ? `${indent * 40}px` : 0 }}>
+            <motion.div
+                onClick={() => setActiveLayer(activeLayer === idx ? null : idx)}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (isCompact || isHorizontal) ? (idx < 10 ? idx : 18 - idx) * 0.05 : idx * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`
+                    ${isHorizontal ? 'w-[320px] h-[104px] rounded-[32px] border-[4px] px-6' : isCompact ? 'w-full max-w-[400px] h-[104px] rounded-[32px] border-[4px] px-4 md:px-6' : 'w-full max-w-[1000px] h-40 rounded-[48px] border-[6px] px-16'} flex items-center justify-between cursor-pointer transition-all duration-300 relative group
+                    ${activeLayer === idx ? `shadow-[0_40px_100px_rgba(0,0,0,0.2)] border-slate-900 bg-white -translate-y-2 z-20` : `shadow-xl border-slate-100 ${(layerTypeMeta as any)[layer.type].bg}`}
+                `}
+            >
+                <div className={`flex items-center gap-3 md:gap-6 w-full ${isUshapeRight ? 'flex-row-reverse text-right' : ''}`}>
+                    <div className={`${(isCompact || isHorizontal) ? 'w-14 h-14 rounded-[20px] border-[3px]' : 'w-24 h-24 rounded-[32px] border-4'} flex-shrink-0 flex items-center justify-center shadow-xl bg-white ${(layerTypeMeta as any)[layer.type].border}`}>
+                        {(() => {
+                            const Meta = (layerTypeMeta as any)[layer.type];
+                            return <Meta.icon className={`${(isCompact || isHorizontal) ? 'w-6 h-6' : 'w-12 h-12'} ${(layerTypeMeta as any)[layer.type].text}`} />;
+                        })()}
+                    </div>
+                    <div className={`flex-grow overflow-hidden flex flex-col justify-center ${isUshapeRight ? 'items-end' : 'items-start'}`}>
+                        <div className={`flex items-center gap-2 md:gap-4 mb-1 ${isUshapeRight ? 'flex-row-reverse' : ''}`}>
+                            <span className={`${(isCompact || isHorizontal) ? 'text-[10px] px-2 py-0.5' : 'text-[12px] px-4 py-1.5'} font-black uppercase tracking-[0.2em] md:tracking-[0.4em] rounded-xl ${(layerTypeMeta as any)[layer.type].accent} text-white shadow-sm truncate`}>
+                                {(layerTypeMeta as any)[layer.type].subtext}
+                            </span>
+                        </div>
+                        <h3 className={`${(isCompact || isHorizontal) ? 'text-lg md:text-xl' : 'text-3xl md:text-5xl'} font-black tracking-tighter truncate ${activeLayer === idx ? "text-slate-900" : (layerTypeMeta as any)[layer.type].text}`}>
+                            {layer.label}
+                        </h3>
+                    </div>
+                </div>
+                {!(isCompact || isHorizontal) && (
+                    <div className="text-right flex-shrink-0 ml-4 hidden md:block">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Dimensions</span>
+                            <p className="text-3xl font-black font-mono text-slate-900 opacity-90">{layer.details.split(',')[0]}</p>
+                        </div>
+                    </div>
+                )}
+                <div className={`absolute ${(isCompact || isHorizontal) && isUshapeRight ? '-left-6' : '-right-6'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    <div className={`w-6 h-6 rounded-full border-4 border-slate-900 ${(layerTypeMeta as any)[layer.type].bg}`} />
+                </div>
+            </motion.div>
+            
+            {!isHorizontal && !isCompact && idx < model.layers.length - 1 && (
+                <div className="py-6 flex flex-col items-center gap-2 w-full max-w-[1000px]">
+                    <div className="w-1.5 h-16 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full opacity-40 mx-auto" />
+                    <ChevronDownIcon className="w-6 h-6 text-slate-300 animate-bounce mx-auto" />
+                </div>
+            )}
+            {isCompact && !isUshapeRight && idx < 9 && (
+                <div className={`py-1.5 flex flex-col items-center gap-1 w-full max-w-[400px]`} style={{ paddingLeft: `${indent * 40}px` }}>
+                    <div className={`w-1.5 h-5 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full opacity-40 ${indent !== Math.floor(idx/2) ? 'ml-6' : ''}`} />
+                </div>
+            )}
+            {isCompact && isUshapeRight && idx > 10 && (
+                <div className={`py-1.5 flex flex-col items-center gap-1 w-full max-w-[400px]`} style={{ paddingRight: `${indent * 40}px` }}>
+                    <div className={`w-1.5 h-5 bg-gradient-to-t from-slate-200 to-slate-400 rounded-full opacity-40 ${indent !== Math.floor((18-idx)/2) ? 'mr-6' : ''}`} />
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-[#fafafa] text-slate-900 font-sans pb-96 overflow-x-hidden relative">
-            {/* Navigation Header */}
-            <header className="px-16 pt-16 pb-12 max-w-[1900px] mx-auto relative z-20">
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }} 
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 border-b-2 border-slate-200 pb-10"
-                >
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <Link href="/models" className="p-3 bg-white border-2 border-slate-100 rounded-xl hover:border-slate-900 transition-all text-slate-400 hover:text-slate-900">
-                                <ArrowLeftIcon className="w-6 h-6" />
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <Link href="/models" className="text-sm font-bold text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-widest">Vault</Link>
-                                <ChevronRightIcon className="w-4 h-4 text-slate-300" />
-                                <span className="text-sm font-bold text-slate-900 uppercase tracking-widest">Architecture Schematics</span>
-                            </div>
-                        </div>
-                        <h1 className="text-7xl font-black tracking-tighter leading-none text-slate-900">
-                           Structural <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Blueprint</span>
-                        </h1>
-                        <p className="text-xl text-slate-500 font-medium max-w-2xl">
-                           Interactive vertical decomposition of the neural structures powering PAQNet and related IQA models.
-                        </p>
-                    </div>
-
-                    <div className="flex bg-white border-4 border-slate-100 rounded-[32px] p-2 shadow-2xl shadow-slate-200/50">
-                        {Object.keys(architectures).map((key) => (
-                            <button
-                                key={key}
-                                onClick={() => setSelectedModel(key as any)}
-                                className={`px-10 py-4 rounded-2xl font-black text-lg transition-all ${
-                                    selectedModel === key 
-                                    ? "bg-slate-900 text-white shadow-lg" 
-                                    : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
-                                }`}
-                            >
-                                {architectures[key as keyof typeof architectures].title}
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
-            </header>
-
-            {/* Model Summary Overlay (Floating) */}
-            <div className="px-16 max-w-[1900px] mx-auto mb-20">
-                <motion.div 
-                    key={selectedModel + "summary"}
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-10 bg-white border-4 border-slate-100 rounded-[40px] shadow-xl max-w-3xl"
-                >
-                    <h2 className="text-5xl font-black text-slate-900 mb-4">{model.subtitle}</h2>
-                    <p className="text-2xl text-slate-500 font-medium leading-relaxed">{model.summary}</p>
-                </motion.div>
-            </div>
-
-            {/* Main Vertical Diagram */}
-            <main className="max-w-[1400px] mx-auto px-16 flex flex-col items-center relative z-10">
-                <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait">
+                {view === 'list' ? (
                     <motion.div 
-                        key={selectedModel}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="flex flex-col items-center w-full"
+                        key="list-view"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, y: -40 }}
+                        className="px-16 pt-32 pb-32 max-w-[1900px] mx-auto relative z-10"
                     >
-                        {model.layers.map((layer, idx) => (
-                            <div key={`${selectedModel}-${idx}`} className="flex flex-col items-center w-full">
-                                <motion.div
-                                    onMouseEnter={() => setHoveredLayer(idx)}
-                                    onMouseLeave={() => setHoveredLayer(null)}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    whileHover={{ scale: 1.05, x: 20 }}
-                                    className={`
-                                        w-full max-w-[1000px] h-40 rounded-[48px] border-[6px] flex items-center justify-between px-16 cursor-help transition-all duration-300 relative group
-                                        ${hoveredLayer === idx ? "shadow-[0_40px_100px_rgba(0,0,0,0.2)] border-slate-900 bg-white -translate-y-2 z-20" : `shadow-xl border-slate-100 ${layerTypeMeta[layer.type].bg}`}
-                                    `}
+                        {/* Premium List Header */}
+                        <div className="mb-32 flex flex-col md:flex-row justify-between items-end gap-16">
+                            <div className="space-y-8">
+                                <motion.div 
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    className="flex items-center gap-4"
                                 >
-                                    <div className="flex items-center gap-12">
-                                        <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center shadow-xl bg-white border-4 ${layerTypeMeta[layer.type].border}`}>
-                                            {(() => {
-                                                const Meta = layerTypeMeta[layer.type];
-                                                return <Meta.icon className={`w-12 h-12 ${layerTypeMeta[layer.type].text}`} />;
-                                            })()}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-4 mb-2">
-                                                <span className={`text-[12px] font-black uppercase tracking-[0.4em] px-4 py-1.5 rounded-xl ${layerTypeMeta[layer.type].accent} text-white shadow-sm`}>
-                                                    {layerTypeMeta[layer.type].subtext}
-                                                </span>
-                                                <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest border-l-2 border-slate-200 pl-4">
-                                                    Block #{idx + 1}
-                                                </span>
-                                            </div>
-                                            <h3 className={`text-5xl font-black tracking-tighter ${hoveredLayer === idx ? "text-slate-900" : layerTypeMeta[layer.type].text}`}>
-                                                {layer.label}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Dimensions</span>
-                                            <p className="text-3xl font-black font-mono text-slate-900 opacity-90">{layer.details.split(',')[0]}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Connection Line Indicator */}
-                                    <div className="absolute -left-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className={`w-6 h-6 rounded-full border-4 border-slate-900 ${layerTypeMeta[layer.type].bg}`} />
+                                    <Link href="/models" className="p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-slate-900 transition-all text-slate-400 hover:text-slate-900 shadow-sm">
+                                        <ArrowLeftIcon className="w-8 h-8" />
+                                    </Link>
+                                    <div className="flex items-center gap-3">
+                                        <Link href="/" className="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-[0.4em]">Home</Link>
+                                        <ChevronRightIcon className="w-3 h-3 text-slate-300" />
+                                        <Link href="/models" className="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-[0.4em]">Vault</Link>
+                                        <ChevronRightIcon className="w-3 h-3 text-slate-300" />
+                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em]">Architecture Lab</span>
                                     </div>
                                 </motion.div>
-                                
-                                {idx < model.layers.length - 1 && (
-                                    <div className="py-6 flex flex-col items-center gap-2">
-                                        <div className="w-1.5 h-16 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full opacity-40" />
-                                        <ChevronDownIcon className="w-6 h-6 text-slate-300 animate-bounce" />
-                                    </div>
-                                )}
+                                <h1 className="text-[9rem] font-black tracking-tighter leading-[0.75] text-slate-900">
+                                    Architecture<br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-indigo-600 to-purple-600">Blueprints</span>
+                                </h1>
+                                <p className="text-3xl text-slate-500 font-medium max-w-3xl leading-tight">
+                                    Deconstruct and explore the layered foundations of our primary photoacoustic imaging architectures.
+                                </p>
                             </div>
-                        ))}
-                    </motion.div>
-                </AnimatePresence>
-            </main>
+                            
+                            <div className="flex flex-col items-end gap-6">
+                                <div className="flex -space-x-4">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="w-20 h-20 rounded-full border-8 border-[#fafafa] bg-slate-100 overflow-hidden shadow-lg">
+                                            <div className={`w-full h-full bg-gradient-to-br ${i % 2 === 0 ? 'from-emerald-400 to-blue-500' : 'from-indigo-400 to-purple-500'} opacity-20`} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="bg-slate-900 text-white px-10 py-6 rounded-[40px] shadow-2xl flex items-center gap-6">
+                                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                                        <BinaryIcon className="w-6 h-6 text-emerald-400" />
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black opacity-50 uppercase tracking-[0.4em]">Ready Schematics</p>
+                                        <p className="text-4xl font-black">{Object.keys(architectures).length} Units</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            {/* Flashcard Style Overlay */}
+                        {/* Grid of Architecture Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-16">
+                            {Object.entries(architectures).map(([key, data], idx) => (
+                                <motion.div
+                                    key={key}
+                                    initial={{ opacity: 0, y: 50 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    whileHover={{ y: -20, scale: 1.02 }}
+                                    className="group cursor-pointer"
+                                    onClick={() => {
+                                        setSelectedModel(key as any);
+                                        setView('details');
+                                    }}
+                                >
+                                    <div className="h-[600px] bg-white border-4 border-slate-100 rounded-[72px] p-16 shadow-[0_40px_100px_rgba(0,0,0,0.02)] group-hover:shadow-[0_80px_150px_rgba(0,0,0,0.1)] group-hover:border-slate-900 transition-all duration-700 flex flex-col relative overflow-hidden">
+                                        {/* Abstract Decoration */}
+                                        <div className="absolute top-0 right-0 w-80 h-80 bg-slate-50 rounded-bl-[120px] group-hover:bg-emerald-50 transition-colors duration-700 -z-0 opacity-50" />
+                                        
+                                        <div className="relative z-10 flex flex-col h-full">
+                                            <div className="flex justify-between items-start mb-16">
+                                                <div className="w-28 h-28 bg-slate-900 text-white rounded-[40px] flex items-center justify-center shadow-2xl group-hover:bg-slate-800 transition-all duration-700">
+                                                    {data.isUshaped ? <ShapesIcon className="w-14 h-14" /> : 
+                                                     data.isYshaped ? <ActivityIcon className="w-14 h-14" /> :
+                                                     <CpuIcon className="w-14 h-14" />}
+                                                </div>
+                                                <div className="bg-slate-50 rounded-3xl px-8 py-3 border-2 border-slate-100">
+                                                    <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">{data.isUshaped ? "Symmetric" : data.isYshaped ? "Dual-Path" : "Sequential"}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-6 mb-12">
+                                                <h3 className="text-6xl font-black text-slate-900 tracking-tighter leading-none group-hover:text-emerald-600 transition-colors">
+                                                    {data.title}
+                                                </h3>
+                                                <p className="text-xl font-black text-slate-400 uppercase tracking-[0.4em]">{data.subtitle}</p>
+                                            </div>
+
+                                            <p className="text-2xl font-medium text-slate-500 leading-snug mb-12 line-clamp-3">
+                                                {data.summary}
+                                            </p>
+
+                                            <div className="mt-auto pt-10 border-t-4 border-slate-50 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                                        <ShieldCheckIcon className="w-6 h-6" />
+                                                    </div>
+                                                    <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Validated</span>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-emerald-600 font-black text-xl group-hover:translate-x-2 transition-transform">
+                                                    View Schematic
+                                                    <ChevronRightIcon className="w-8 h-8" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div 
+                        key="details-view"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                    >
+                        {/* Blueprint Navigation */}
+                        <header className="px-16 pt-16 pb-12 max-w-[1900px] mx-auto relative z-20">
+                            <motion.div 
+                                initial={{ opacity: 0, y: -20 }} 
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 border-b-2 border-slate-200 pb-10"
+                            >
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <button 
+                                            onClick={() => setView('list')}
+                                            className="p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-slate-900 transition-all text-slate-400 hover:text-slate-900 shadow-sm"
+                                        >
+                                            <ArrowLeftIcon className="w-8 h-8" />
+                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <Link href="/" className="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-[0.4em]">Home</Link>
+                                            <ChevronRightIcon className="w-3 h-3 text-slate-300" />
+                                            <Link href="/models" className="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-[0.4em]">Vault</Link>
+                                            <ChevronRightIcon className="w-3 h-3 text-slate-300" />
+                                            <button onClick={() => setView('list')} className="text-[10px] font-black text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-[0.4em]">Architecture Lab</button>
+                                            <ChevronRightIcon className="w-3 h-3 text-slate-300" />
+                                            <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em]">{model.title}</span>
+                                        </div>
+                                    </div>
+                                    <h1 className="text-8xl font-black tracking-tighter leading-none text-slate-900">
+                                       Neural <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600">Decomposition</span>
+                                    </h1>
+                                </div>
+
+                                <div className="flex bg-white border-4 border-slate-100 rounded-[40px] p-2 shadow-2xl shadow-slate-200/50 overflow-x-auto max-w-[800px] scrollbar-hide">
+                                    {Object.keys(architectures).map((key) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setSelectedModel(key as any)}
+                                            className={`px-10 py-4 rounded-3xl font-black text-sm whitespace-nowrap transition-all ${
+                                                selectedModel === key 
+                                                ? "bg-slate-900 text-white shadow-lg" 
+                                                : "text-slate-400 hover:text-slate-900 hover:bg-slate-50"
+                                            }`}
+                                        >
+                                            {architectures[key as keyof typeof architectures].title}
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </header>
+
+                        <div className="px-16 max-w-[1900px] mx-auto mb-20 flex justify-between items-start">
+                            <motion.div 
+                                key={selectedModel + "summary"}
+                                initial={{ opacity: 0, x: -50 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="p-16 bg-white border-4 border-slate-100 rounded-[64px] shadow-2xl max-w-4xl relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500" />
+                                <h2 className="text-6xl font-black text-slate-900 mb-6">{model.subtitle}</h2>
+                                <p className="text-3xl text-slate-500 font-medium leading-relaxed">{model.summary}</p>
+                            </motion.div>
+                            
+                            <div className="hidden xl:flex flex-col items-end gap-4 mt-8">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.6em]">System Integrity</div>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <div key={i} className="w-2 h-12 bg-emerald-500 rounded-full" />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <main className="max-w-[1700px] mx-auto px-16 flex flex-col items-center relative z-10 pb-40">
+                            <AnimatePresence mode="wait">
+                                <motion.div 
+                                    key={selectedModel}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="flex flex-col items-center w-full"
+                                >
+                                    {model.isUshaped ? (
+                                        <div className="flex w-full justify-between items-stretch relative px-10">
+                                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                                                {[0, 1, 2, 3].map((arrowIdx) => (
+                                                    <motion.path 
+                                                        key={arrowIdx}
+                                                        initial={{ pathLength: 0, opacity: 0 }}
+                                                        animate={{ pathLength: 1, opacity: 0.4 }}
+                                                        transition={{ delay: 1 + arrowIdx * 0.2, duration: 1 }}
+                                                        d={`M ${30 + arrowIdx * 3}% ${5 + arrowIdx * 25}% L ${70 - arrowIdx * 3}% ${5 + arrowIdx * 25}%`}
+                                                        stroke="#94a3b8" strokeWidth="3" strokeDasharray="8 8" fill="none"
+                                                    />
+                                                ))}
+                                            </svg>
+                                            <div className="flex flex-col w-[45%] z-10 items-start">
+                                                {model.layers.slice(0, 9).map((layer: any, i: number) => {
+                                                    const depth = Math.floor(i / 2);
+                                                    return renderLayer(layer, i, true, false, depth);
+                                                })}
+                                            </div>
+                                            <div className="flex flex-col justify-end w-[10%] z-10 pb-[12px] items-center">
+                                                {model.layers[9] && renderLayer(model.layers[9], 9, true, false, 0)}
+                                            </div>
+                                            <div className="flex flex-col-reverse w-[45%] z-10 items-end">
+                                                {model.layers.slice(10).map((layer: any, i: number) => {
+                                                    const reverseI = 8 - i; 
+                                                    const depth = Math.floor(reverseI / 2);
+                                                    return renderLayer(layer, 10 + i, true, true, depth);
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : model.isYshaped ? (
+                                        <div className="flex flex-col items-center w-full max-w-[1500px] relative">
+                                            <div className="flex w-full justify-between items-start mb-20 px-20">
+                                                <div className="flex flex-col items-center gap-10 w-[42%]">
+                                                    <div className="bg-slate-900 text-white px-10 py-3 rounded-full text-[12px] font-black uppercase tracking-[0.6em] mb-4 shadow-2xl">Spatial Branch</div>
+                                                    {model.layers.slice(0, 3).map((layer: any, idx: number) => renderLayer(layer, idx, true, false, 0))}
+                                                </div>
+                                                <div className="flex flex-col items-center gap-10 w-[42%]">
+                                                    <div className="bg-slate-900 text-white px-10 py-3 rounded-full text-[12px] font-black uppercase tracking-[0.6em] mb-4 shadow-2xl">Signal Branch</div>
+                                                    {model.layers.slice(3, 6).map((layer: any, idx: number) => renderLayer(layer, idx + 3, true, true, 0))}
+                                                </div>
+                                            </div>
+
+                                            <div className="relative w-full h-80 flex items-center justify-center -my-10 z-0">
+                                                <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none">
+                                                    <motion.path initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.5 }} d="M 350 0 C 350 150, 750 150, 750 250" className="stroke-slate-300" strokeWidth="6" strokeDasharray="16 16" fill="none" style={{ transform: 'translateX(calc(50% - 750px))' }} />
+                                                    <motion.path initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.5 }} d="M 1150 0 C 1150 150, 750 150, 750 250" className="stroke-slate-300" strokeWidth="6" strokeDasharray="16 16" fill="none" style={{ transform: 'translateX(calc(50% - 750px))' }} />
+                                                    <motion.circle r="10" fill="#10b981"><animateMotion dur="2.5s" repeatCount="indefinite" path="M 350 0 C 350 150, 750 150, 750 250" /></motion.circle>
+                                                    <motion.circle r="10" fill="#6366f1"><animateMotion dur="2.5s" repeatCount="indefinite" path="M 1150 0 C 1150 150, 750 150, 750 250" /></motion.circle>
+                                                </svg>
+                                                <motion.div initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 1, type: "spring" }} className="w-40 h-40 bg-white border-[10px] border-slate-900 rounded-[48px] flex items-center justify-center shadow-[0_40px_80px_rgba(0,0,0,0.3)] relative z-10"><ZapIcon className="w-16 h-16 text-emerald-500 animate-pulse" /></motion.div>
+                                            </div>
+
+                                            <div className="flex flex-col items-center gap-16 w-full mt-24">
+                                                <div className="flex flex-col items-center w-full max-w-[1000px]">
+                                                    {model.layers.slice(6).map((layer: any, idx: number) => (
+                                                        <div key={idx+6} className="w-full flex flex-col items-center">
+                                                            {renderLayer(layer, idx + 6, false, false, 0)}
+                                                            {idx < model.layers.slice(6).length - 1 && (
+                                                                <div className="py-12">
+                                                                    <div className="w-3 h-20 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full opacity-40" />
+                                                                    <ChevronDownIcon className="w-10 h-10 text-slate-300 -mt-2 animate-bounce" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-row items-center w-full overflow-x-auto pb-40 pt-20 scrollbar-hide px-20 gap-12">
+                                            {model.layers.map((layer: any, idx: number) => (
+                                                <div key={idx} className="flex items-center gap-12 flex-shrink-0">
+                                                    {renderLayer(layer, idx, false, false, 0, true)}
+                                                    {idx < model.layers.length - 1 && (
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="w-20 h-0.5 bg-slate-200 relative">
+                                                                <MoveRightIcon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-slate-300" />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </AnimatePresence>
+                        </main>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Premium Flashcard Overlay */}
             <AnimatePresence>
-                {hoveredLayer !== null && (
+                {activeLayer !== null && model.layers[activeLayer] && (
                     <motion.div
                         initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+                        animate={{ opacity: 1, backdropFilter: "blur(12px)" }}
                         exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none p-6 md:p-12"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-12"
                     >
-                        <div className="absolute inset-0 bg-slate-950/40" />
-                        
+                        <div className="absolute inset-0 bg-slate-950/60 cursor-pointer" onClick={() => setActiveLayer(null)} />
                         <motion.div
-                            initial={{ scale: 0.8, rotateY: 30, y: 50, opacity: 0 }}
-                            animate={{ scale: 1, rotateY: 0, y: 0, opacity: 1 }}
-                            exit={{ scale: 0.8, rotateY: -30, y: 50, opacity: 0 }}
-                            transition={{ type: "spring", damping: 20, stiffness: 150 }}
-                            className="relative w-full max-w-[900px] bg-white rounded-[64px] shadow-[0_64px_128px_-16px_rgba(0,0,0,0.5)] border-[12px] border-slate-900 pointer-events-auto flex flex-col items-center overflow-hidden"
+                            initial={{ scale: 0.8, rotateX: 20, y: 100, opacity: 0 }}
+                            animate={{ scale: 1, rotateX: 0, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.8, rotateX: -20, y: 100, opacity: 0 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            className="relative w-full max-w-[1100px] bg-white rounded-[80px] shadow-[0_100px_200px_-50px_rgba(0,0,0,0.8)] border-[16px] border-slate-900 pointer-events-auto flex flex-col items-center overflow-hidden"
                         >
-                            {/* Card Header Decoration */}
-                            <div className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-r ${layerTypeMeta[model.layers[hoveredLayer].type].gradient}`} />
+                            <button onClick={() => setActiveLayer(null)} className="absolute top-12 right-12 z-50 p-6 bg-slate-100 hover:bg-slate-900 hover:text-white rounded-[32px] transition-all group shadow-xl">
+                                <XIcon className="w-10 h-10 group-hover:rotate-90 transition-all duration-500" />
+                            </button>
                             
-                            <div className="p-16 w-full flex flex-col items-center text-center">
-                                <div className={`w-36 h-36 rounded-[48px] flex items-center justify-center mb-10 shadow-2xl bg-white border-4 ${layerTypeMeta[model.layers[hoveredLayer].type].border} relative`}>
+                            <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-r ${(layerTypeMeta as any)[model.layers[activeLayer].type].gradient}`} />
+                            
+                            <div className="p-24 w-full flex flex-col items-center text-center">
+                                <motion.div 
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                    className={`w-48 h-48 rounded-[64px] flex items-center justify-center mb-16 shadow-[0_40px_80px_rgba(0,0,0,0.1)] bg-white border-8 ${(layerTypeMeta as any)[model.layers[activeLayer].type].border} relative`}
+                                >
                                     {(() => {
-                                        const Meta = layerTypeMeta[model.layers[hoveredLayer].type];
-                                        return <Meta.icon className={`w-20 h-20 ${layerTypeMeta[model.layers[hoveredLayer].type].text}`} />;
+                                        const Meta = (layerTypeMeta as any)[model.layers[activeLayer].type];
+                                        return <Meta.icon className={`w-28 h-28 ${(layerTypeMeta as any)[model.layers[activeLayer].type].text}`} />;
                                     })()}
-                                    <div className="absolute -bottom-4 -right-4 bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl">
-                                        {hoveredLayer + 1}
+                                    <div className="absolute -bottom-6 -right-6 bg-slate-900 text-white w-20 h-20 rounded-[28px] flex items-center justify-center font-black text-4xl shadow-2xl">
+                                        {activeLayer + 1}
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                <div className="space-y-4 mb-12">
-                                    <span className="text-sm font-black uppercase tracking-[0.6em] text-slate-400 block">
-                                        {model.layers[hoveredLayer].type} module unit
-                                    </span>
-                                    <h2 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none">
-                                        {model.layers[hoveredLayer].label}
-                                    </h2>
+                                <div className="space-y-6 mb-16">
+                                    <span className="text-xl font-black uppercase tracking-[0.8em] text-slate-300 block">{(layerTypeMeta as any)[model.layers[activeLayer].type].subtext} module</span>
+                                    <h2 className="text-8xl md:text-[10rem] font-black text-slate-900 tracking-tighter leading-[0.85]">{model.layers[activeLayer].label}</h2>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-10 w-full mb-14">
-                                    <div className="p-10 bg-slate-50 rounded-[40px] border-4 border-slate-100 flex flex-col items-center shadow-inner group">
-                                        <ShapesIcon className="w-10 h-10 text-slate-400 mb-4 group-hover:scale-110 transition-transform" />
-                                        <div className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-2">Technical Dimension</div>
-                                        <div className="text-4xl font-black text-slate-900 font-mono tracking-tight">{model.layers[hoveredLayer].details}</div>
+                                <div className="grid grid-cols-2 gap-12 w-full mb-20">
+                                    <div className="p-12 bg-slate-50 rounded-[56px] border-4 border-slate-100 flex flex-col items-center">
+                                        <MaximizeIcon className="w-12 h-12 text-slate-400 mb-4" />
+                                        <div className="text-sm font-black uppercase tracking-[0.4em] text-slate-400 mb-4">Architecture Dimension</div>
+                                        <div className="text-5xl font-black text-slate-900 font-mono tracking-tight">{model.layers[activeLayer].details}</div>
                                     </div>
-                                    <div className="p-10 bg-slate-50 rounded-[40px] border-4 border-slate-100 flex flex-col items-center shadow-inner group">
-                                        <BinaryIcon className="w-10 h-10 text-slate-400 mb-4 group-hover:scale-110 transition-transform" />
-                                        <div className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-2">Network Utility</div>
-                                        <div className="text-4xl font-black text-slate-900 uppercase tracking-tight">{model.layers[hoveredLayer].subtext || model.layers[hoveredLayer].type}</div>
+                                    <div className="p-12 bg-slate-50 rounded-[56px] border-4 border-slate-100 flex flex-col items-center">
+                                        <BinaryIcon className="w-12 h-12 text-slate-400 mb-4" />
+                                        <div className="text-sm font-black uppercase tracking-[0.4em] text-slate-400 mb-4">Neural Application</div>
+                                        <div className="text-5xl font-black text-slate-900 uppercase tracking-tight">{(layerTypeMeta as any)[model.layers[activeLayer].type].subtext}</div>
                                     </div>
                                 </div>
 
-                                <div className="relative">
-                                    <div className="absolute -left-10 top-0 text-6xl font-serif text-slate-200 italic">"</div>
-                                    <p className="text-3xl md:text-4xl font-medium text-slate-600 leading-tight max-w-4xl italic px-4">
-                                        {model.layers[hoveredLayer].description}
+                                <div className="relative max-w-5xl">
+                                    <div className="absolute -left-16 -top-10 text-[12rem] font-serif text-slate-100 italic opacity-50 select-none">"</div>
+                                    <p className="text-4xl md:text-5xl font-medium text-slate-600 leading-tight italic relative z-10">
+                                        {model.layers[activeLayer].description}
                                     </p>
-                                    <div className="absolute -right-10 bottom-0 text-6xl font-serif text-slate-200 italic">"</div>
-                                </div>
-
-                                <div className="mt-16 flex items-center gap-10">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                                        <span className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Active Module</span>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-4 h-4 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
-                                        <span className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Weights Loaded</span>
-                                    </div>
+                                    <div className="absolute -right-16 -bottom-10 text-[12rem] font-serif text-slate-100 italic opacity-50 select-none">"</div>
                                 </div>
                             </div>
 
-                            {/* Card Footer */}
-                            <div className="w-full bg-slate-900 py-6 px-16 flex justify-between items-center">
-                                <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em]">
-                                    Neural Flashcard Unit v2.0
+                            <div className="w-full bg-slate-900 py-10 px-24 flex justify-between items-center">
+                                <div className="flex items-center gap-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.8)]" />
+                                        <span className="text-sm font-black text-white uppercase tracking-[0.4em]">Core Optimized</span>
+                                    </div>
+                                    <div className="w-1 h-8 bg-white/10 rounded-full" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-4 h-4 rounded-full bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.8)]" />
+                                        <span className="text-sm font-black text-white uppercase tracking-[0.4em]">Memory Safe</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-2 h-2 rounded-full bg-white opacity-20" />
-                                    <div className="w-2 h-2 rounded-full bg-white opacity-40" />
-                                    <div className="w-2 h-2 rounded-full bg-white opacity-100" />
-                                </div>
+                                <div className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em]">Neural Flashcard v3.0 // System Alpha</div>
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Background elements */}
+            {/* Premium Background elements */}
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute top-[20%] left-[10%] w-[50%] h-[50%] bg-emerald-100/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[20%] right-[10%] w-[50%] h-[50%] bg-blue-100/20 rounded-full blur-[120px]" />
+                <div className="absolute top-[10%] left-[5%] w-[60%] h-[60%] bg-emerald-100/30 rounded-full blur-[160px]" />
+                <div className="absolute bottom-[10%] right-[5%] w-[60%] h-[60%] bg-indigo-100/30 rounded-full blur-[160px]" />
+                <div className="absolute top-[40%] left-[30%] w-[40%] h-[40%] bg-purple-100/20 rounded-full blur-[140px]" />
                 
-                {/* Grid Overlay */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{ 
+                <div className="absolute inset-0 opacity-[0.05]" style={{ 
                     backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', 
-                    backgroundSize: '60px 60px' 
+                    backgroundSize: '80px 80px' 
                 }} />
             </div>
             
-            {/* Legend / Footer */}
-            <footer className="fixed bottom-12 left-1/2 -translate-x-1/2 z-30 bg-slate-900 text-white px-12 py-6 rounded-full shadow-2xl border-4 border-slate-800 flex items-center gap-12 backdrop-blur-xl bg-opacity-90">
-                <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-slate-400 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Input</span>
+            {/* Global Legend */}
+            <footer className="fixed bottom-16 left-1/2 -translate-x-1/2 z-30 bg-slate-950 text-white px-20 py-8 rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-4 border-slate-800 flex items-center gap-16 backdrop-blur-3xl bg-opacity-95">
+                <div className="flex flex-col items-start gap-1">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Topology Key</span>
+                    <div className="flex items-center gap-12">
+                        <div className="flex items-center gap-4">
+                            <div className="w-4 h-4 bg-slate-400 rounded-full shadow-[0_0_15px_rgba(148,163,184,0.5)]" />
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-80">Source</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="w-4 h-4 bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" />
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-80">Filters</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="w-4 h-4 bg-rose-400 rounded-full shadow-[0_0_15px_rgba(251,113,133,0.5)]" />
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-80">Pooling</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="w-4 h-4 bg-amber-400 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-80">Neurons</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="w-4 h-4 bg-blue-400 rounded-full shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-80">Result</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Convolution</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-rose-400 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Pooling</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-amber-400 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Activation / FC</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 bg-blue-400 rounded-full" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Output</span>
+                <div className="h-10 w-0.5 bg-slate-800 rounded-full" />
+                <div className="flex items-center gap-6">
+                    <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center">
+                        <InfoIcon className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">Active View</p>
+                        <p className="text-lg font-black">{view === 'list' ? 'Vault Overview' : model.title}</p>
+                    </div>
                 </div>
             </footer>
         </div>

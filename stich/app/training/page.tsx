@@ -192,6 +192,13 @@ export default function TrainingStudio() {
                                     >
                                         <option value="paqnet">PAQNet Core (EfficientNet-B0)</option>
                                         <option value="iqdcnn">IQDCNN Multi-Task</option>
+                                        <option value="unet">U-Net Architecture</option>
+                                        <option value="fdunet">FD-UNet Architecture</option>
+                                        <option value="pixeldl">Pixel-DL Physics</option>
+                                        <option value="ynet">Y-Net Dual-Input</option>
+                                        <option value="fdynet">FD-YNet Dense Fusion</option>
+                                        <option value="pixelgan">PixelGAN Adversarial</option>
+                                        <option value="pixelcgan">PixelCGAN Conditional</option>
                                         <option value="resnet50">ResNet-50 Baseline</option>
                                     </select>
                                 </div>

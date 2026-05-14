@@ -14,7 +14,8 @@ SAVED_MODELS_DIR = os.path.join(PROJECT_ROOT, "saved_models")
 from models.paqnet import PhotoacousticQualityNet
 from models.iqdcnn import IQDCNN
 from models.efficientnet_iqa import EfficientNetIQA
-
+from models.unet_fdunet import UNet, FDUNet, PixelDL
+from models.pixel_gan import PixelGANGenerator, PixelCGANGenerator
 
 def _create_model(model_name: str):
     """Create a fresh model architecture (no weights) for training from scratch."""
@@ -25,11 +26,21 @@ def _create_model(model_name: str):
         return IQDCNN()
     elif "efficientnet" in name:
         return EfficientNetIQA()
+    elif "unet" == name:
+        return UNet()
+    elif "fdunet" == name:
+        return FDUNet()
+    elif "pixeldl" == name:
+        return PixelDL()
+    elif "pixelgan" == name:
+        return PixelGANGenerator()
+    elif "pixelcgan" == name:
+        return PixelCGANGenerator()
     elif "resnet" in name:
         # Fallback to PAQNet for resnet selection
         return PhotoacousticQualityNet()
     else:
-        raise ValueError(f"Unknown architecture: '{model_name}'. Supported: paqnet, iqdcnn, efficientnet")
+        raise ValueError(f"Unknown architecture: '{model_name}'. Supported: paqnet, iqdcnn, efficientnet, unet, fdunet, pixeldl, pixelgan, pixelcgan")
 
 
 def run_training(epochs, model_name, train_loader, val_loader, task_instance, dataset_name="unknown"):
