@@ -56,7 +56,7 @@ export default function ComparatorPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] text-slate-900 font-sans pb-32">
+        <div className="min-h-screen bg-transparent text-slate-900 font-sans pb-32">
             {/* Clean Header */}
             <header className="px-16 pt-16 pb-12 max-w-[1900px] mx-auto">
                 <motion.div 

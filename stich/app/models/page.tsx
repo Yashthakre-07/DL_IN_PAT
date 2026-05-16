@@ -74,14 +74,51 @@ export default function ModelVaultPage() {
         fetchModels();
     }, []);
 
-    const filteredModels = models.filter(m => 
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.architecture.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.dataset.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const getEfficiencyScore = (m: any) => {
+        // High Pearson is good, Low Huber/MAE is good
+        if (m.metrics?.pearson) return m.metrics.pearson * 100;
+        if (m.metrics?.best_val_huber) return Math.max(0, 100 - (m.metrics.best_val_huber * 10)); // Heuristic for Huber
+        if (m.metrics?.mae) return Math.max(0, 100 - (m.metrics.mae * 100)); // Heuristic for MAE
+        return 0;
+    };
+
+    const blacklistedModels = ['paqnet', 'iqdcnn', 'efficientnet'];
+
+    const sortedModels = [...models]
+        .filter(m => 
+            m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            m.architecture.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (m.dataset && m.dataset.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+        .sort((a, b) => {
+            const aIsBlack = blacklistedModels.some(name => a.architecture.toLowerCase().includes(name));
+            const bIsBlack = blacklistedModels.some(name => b.architecture.toLowerCase().includes(name));
+            
+            if (aIsBlack && !bIsBlack) return 1;
+            if (!aIsBlack && bIsBlack) return -1;
+            
+            return getEfficiencyScore(b) - getEfficiencyScore(a);
+        });
+
+    const getModelGradient = (idx: number, total: number, modelArch: string) => {
+        const isBlack = blacklistedModels.some(name => modelArch.toLowerCase().includes(name));
+        if (isBlack) return "from-slate-900 via-slate-800 to-black"; // Black Gradient
+
+        const nonBlackTotal = sortedModels.filter(m => !blacklistedModels.some(name => m.architecture.toLowerCase().includes(name))).length;
+        const ratio = idx / (nonBlackTotal - 1 || 1);
+        
+        // VIBGYOR: Red (Best) -> Orange -> Yellow -> Green -> Blue -> Indigo -> Violet (Worst)
+        if (ratio < 0.14) return "from-red-600 via-rose-500 to-orange-500";   
+        if (ratio < 0.28) return "from-orange-500 via-amber-400 to-yellow-500"; 
+        if (ratio < 0.42) return "from-yellow-400 via-lime-400 to-green-500";  
+        if (ratio < 0.56) return "from-green-500 via-emerald-400 to-teal-500"; 
+        if (ratio < 0.70) return "from-blue-500 via-cyan-400 to-sky-500";      
+        if (ratio < 0.85) return "from-indigo-600 via-blue-700 to-indigo-800"; 
+        return "from-violet-600 via-purple-700 to-fuchsia-800";                
+    };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] text-slate-900 font-sans pb-32">
+        <div className="min-h-screen bg-transparent text-slate-900 font-sans pb-32">
             {/* Header Section */}
             <header className="px-16 pt-16 pb-12 max-w-[1900px] mx-auto">
                 <motion.div 
@@ -161,7 +198,7 @@ export default function ModelVaultPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
                         <AnimatePresence>
-                            {filteredModels.map((m, idx) => (
+                            {sortedModels.map((m, idx) => (
                                 <motion.div
                                     key={m.filename}
                                     initial={{ opacity: 0, y: 20 }}
@@ -169,14 +206,22 @@ export default function ModelVaultPage() {
                                     transition={{ delay: idx * 0.05 }}
                                     whileHover={{ y: -10 }}
                                 >
-                                    <Card className="border-4 border-slate-50 shadow-[0_20px_50px_rgba(0,0,0,0.04)] rounded-[40px] overflow-hidden bg-white hover:shadow-[0_40px_80px_rgba(79,70,229,0.15)] transition-all duration-500 h-full group relative">
-                                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <Card className="border-4 border-slate-50 shadow-[0_20px_50px_rgba(0,0,0,0.04)] rounded-[40px] overflow-hidden bg-white hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)] transition-all duration-500 h-full group relative">
+                                        <div className={`absolute top-0 left-0 w-full h-3 bg-gradient-to-r ${getModelGradient(idx, sortedModels.length, m.architecture)} opacity-80 group-hover:opacity-100 transition-opacity duration-500`} />
                                         <CardContent className="p-10 flex flex-col h-full">
                                             {/* Top Metadata */}
                                             <div className="flex justify-between items-start mb-10">
-                                                <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-all duration-500 shadow-sm">
-                                                    <DatabaseIcon className="w-10 h-10 text-indigo-600 group-hover:text-white transition-colors" />
-                                                </div>
+                                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm ${
+                                                    blacklistedModels.some(name => m.architecture.toLowerCase().includes(name)) ? 'bg-slate-900 text-white' :
+                                                    idx < sortedModels.length * 0.15 ? 'bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white' : 
+                                                    idx < sortedModels.length * 0.30 ? 'bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' :
+                                                    idx < sortedModels.length * 0.45 ? 'bg-yellow-50 text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white' :
+                                                    idx < sortedModels.length * 0.60 ? 'bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white' :
+                                                    idx < sortedModels.length * 0.75 ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' :
+                                                    'bg-violet-50 text-violet-600 group-hover:bg-violet-600 group-hover:text-white'
+                                                 }`}>
+                                                     <DatabaseIcon className="w-10 h-10" />
+                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
                                                     <div className="bg-slate-100 rounded-xl px-4 py-2 flex items-center gap-2 border border-slate-200 shadow-sm">
                                                         <CalendarIcon className="w-3.5 h-3.5 text-slate-500" />
@@ -306,7 +351,7 @@ export default function ModelVaultPage() {
                     </div>
                 )}
 
-                {!loading && filteredModels.length === 0 && (
+                {!loading && sortedModels.length === 0 && (
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

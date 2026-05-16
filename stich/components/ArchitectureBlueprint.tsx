@@ -108,7 +108,67 @@ const architectures = {
             { type: 'block', label: 'Restoration', details: 'Synthesis', description: 'Upsampling and detail recovery.' },
             { type: 'output', label: 'Reconstructed', details: 'Residual Map', description: 'Final photoacoustic image output.' }
         ] as Layer[]
+    },
+    unet: {
+        id: 'unet',
+        title: "U-Net",
+        subtitle: "Symmetric Encoder-Decoder",
+        summary: "The standard U-Net architecture with contractive path for context and expansive path for precise localization.",
+        layers: [
+            { type: 'input', label: 'Input Image', details: '1x128x128', description: 'Grayscale photoacoustic reconstruction.' },
+            { type: 'block', label: 'Encoder 1', details: '32 Filters', description: 'Initial feature extraction and spatial reduction.' },
+            { type: 'block', label: 'Encoder 2', details: '64 Filters', description: 'Deeper spatial abstraction.' },
+            { type: 'block', label: 'Bottleneck', details: '256 Filters', description: 'Compressed latent representation.' },
+            { type: 'block', label: 'Decoder 1', details: '64 Filters', description: 'Upsampling with skip-connections from Encoder 2.' },
+            { type: 'block', label: 'Decoder 2', details: '32 Filters', description: 'Upsampling with skip-connections from Encoder 1.' },
+            { type: 'output', label: 'Output Map', details: '1x128x128', description: 'Denoised/Artifact-free reconstruction.' }
+        ] as Layer[]
+    },
+    fdunet: {
+        id: 'fdunet',
+        title: "FD-UNet",
+        subtitle: "Fully Dense U-Net",
+        summary: "Utilizes Dense Blocks in both encoder and decoder to improve feature reuse and gradient flow.",
+        layers: [
+            { type: 'input', label: 'Input Image', details: '1x128x128', description: 'Input photoacoustic source.' },
+            { type: 'conv', label: 'Init Conv', details: '3x3, 32 Filters', description: 'Initial feature projection.' },
+            { type: 'block', label: 'Dense Enc 1', details: 'k=8, L=4', description: 'Dense connectivity block at the first level.' },
+            { type: 'pool', label: 'Transition Down', details: '2x2 MaxPool', description: 'Spatial reduction and channel management.' },
+            { type: 'block', label: 'Dense Enc 2', details: 'k=8, L=4', description: 'Deeper dense feature extraction.' },
+            { type: 'block', label: 'Dense Bottleneck', details: 'k=8, L=4', description: 'Dense latent representation.' },
+            { type: 'block', label: 'Dense Dec 1', details: 'Concatenated Skip', description: 'Upsampling followed by dense feature synthesis.' },
+            { type: 'output', label: 'Residual Out', details: 'Λθ(x) + x', description: 'Learns the artifact residual function via identity mapping.' }
+        ] as Layer[]
+    },
+    ynet: {
+        id: 'ynet',
+        title: "Y-Net",
+        subtitle: "Dual-Branch Fusion",
+        summary: "Parallel encoders for spatial (image) and temporal (signal) features fused into a common decoder.",
+        layers: [
+            { type: 'input', label: 'Image Branch', details: '1x128x128', description: 'Reconstructed image input.' },
+            { type: 'input', label: 'Signal Branch', details: '1x64x512', description: 'Raw ultrasound sensor data.' },
+            { type: 'block', label: 'Dual Encoders', details: 'Parallel CNN', description: 'Extracting features from both modalities simultaneously.' },
+            { type: 'conv', label: 'Fusion Hub', details: '1x1 Conv, 128 Filters', description: 'Concatenation and feature alignment stage.' },
+            { type: 'block', label: 'Decoder', details: 'Upsampling', description: 'Generating final image from fused feature vector.' },
+            { type: 'output', label: 'Fused Output', details: 'Reconstruction', description: 'Physically consistent image reconstruction.' }
+        ] as Layer[]
+    },
+    pixelgan: {
+        id: 'pixelgan',
+        title: "PixelGAN",
+        subtitle: "Adversarial Translation",
+        summary: "A generative adversarial network for pixel-to-pixel photoacoustic artifact removal.",
+        layers: [
+            { type: 'input', label: 'Source Image', details: 'Artifact-heavy', description: 'Initial poor-quality reconstruction.' },
+            { type: 'conv', label: 'Encoder Stride-2', details: 'Downsampling', description: 'Projecting into latent adversarial space.' },
+            { type: 'block', label: 'Adversarial Bottleneck', details: '16x16 Latent', description: 'Representing compressed image structure.' },
+            { type: 'conv', label: 'Decoder Transpose', details: 'Upsampling', description: 'Synthesizing artifact-free pixels.' },
+            { type: 'relu', label: 'Tanh Head', details: '[-1, 1] Range', description: 'Normalizing output for GAN consistency.' },
+            { type: 'output', label: 'Generated', details: 'Fake Image', description: 'The artifact-removed image proposed by the Generator.' }
+        ] as Layer[]
     }
+
 };
 
 const layerTypeMeta = {
@@ -161,6 +221,25 @@ export default function ArchitectureBlueprint() {
                     >
                         PixelDL
                     </button>
+                    <button 
+                        onClick={() => setSelectedModel('fdunet')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${selectedModel === 'fdunet' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                    >
+                        FD-UNet
+                    </button>
+                    <button 
+                        onClick={() => setSelectedModel('ynet')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${selectedModel === 'ynet' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                    >
+                        Y-Net
+                    </button>
+                    <button 
+                        onClick={() => setSelectedModel('pixelgan')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${selectedModel === 'pixelgan' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                    >
+                        PixelGAN
+                    </button>
+
                 </div>
             </div>
 

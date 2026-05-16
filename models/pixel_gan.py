@@ -1,102 +1,78 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.unet_fdunet import PixelDL # Importing the audited Pixel-DL backbone
 
-class PixelGANGenerator(nn.Module):
+class PatchGANDiscriminator(nn.Module):
     """
-    PixelGAN Generator: Simple encoder-decoder for pixel-level transformation.
+    Exact implementation of the Discriminator from the research diagram.
+    Stages: 128x128x1 -> 64x64x64 -> 32x32x128 -> 16x16x256 -> 16x16x256 -> 16x16x1
     """
-    def __init__(self, in_channels=1, out_channels=1, features=64):
-        super(PixelGANGenerator, self).__init__()
-        self.initial_down = nn.Sequential(
-            nn.Conv2d(in_channels, features, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2)
+    def __init__(self, in_channels=1):
+        super().__init__()
+        
+        # 1. 4x4 conv + Leaky ReLU
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True)
         )
-        self.down1 = nn.Sequential(
-            nn.Conv2d(features, features * 2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(features * 2),
-            nn.LeakyReLU(0.2)
+        
+        # 2. 4x4 conv + BN + Leaky ReLU (32x32x128)
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True)
         )
-        self.bottleneck = nn.Sequential(
-            nn.Conv2d(features * 2, features * 4, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(features * 4),
-            nn.LeakyReLU(0.2),
-            nn.ConvTranspose2d(features * 4, features * 2, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(features * 2),
-            nn.ReLU()
+        
+        # 3. 4x4 conv + BN + Leaky ReLU (16x16x256)
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True)
         )
-        self.up1 = nn.Sequential(
-            nn.ConvTranspose2d(features * 2, features, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(features),
-            nn.ReLU()
+        
+        # 4. 4x4 conv + BN + Leaky ReLU (Final feature map)
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=4, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True)
         )
-        self.final_up = nn.Sequential(
-            nn.ConvTranspose2d(features, out_channels, kernel_size=4, stride=2, padding=1),
-            nn.Tanh()
+        
+        # 5. Final Patch Output + Sigmoid
+        self.patch_out = nn.Sequential(
+            nn.Conv2d(256, 1, kernel_size=4, stride=1, padding=1),
+            nn.Sigmoid()
         )
 
     def forward(self, x):
-        d1 = self.initial_down(x)
-        d2 = self.down1(d1)
-        bn = self.bottleneck(d2)
-        u1 = self.up1(bn)
-        return self.final_up(u1)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        return self.patch_out(x)
 
-class PixelGANDiscriminator(nn.Module):
+class PixelGAN(nn.Module):
     """
-    PixelGAN Discriminator: PatchGAN-style discriminator.
+    PixelGAN with Pixel-DL Generator Backbone.
     """
-    def __init__(self, in_channels=1, features=[64, 128, 256, 512]):
-        super(PixelGANDiscriminator, self).__init__()
-        layers = []
-        in_c = in_channels
-        for feature in features:
-            layers.append(
-                nn.Sequential(
-                    nn.Conv2d(in_c, feature, kernel_size=4, stride=2, padding=1),
-                    nn.BatchNorm2d(feature),
-                    nn.LeakyReLU(0.2)
-                )
-            )
-            in_c = feature
-        layers.append(nn.Conv2d(in_c, 1, kernel_size=4, stride=1, padding=1))
-        self.model = nn.Sequential(*layers)
+    def __init__(self, n_sensors=64, out_channels=1):
+        super().__init__()
+        self.generator = PixelDL(in_channels=n_sensors, out_channels=out_channels)
+        self.discriminator = PatchGANDiscriminator(in_channels=out_channels)
 
     def forward(self, x):
-        return torch.sigmoid(self.model(x))
+        return self.generator(x)
 
-class PixelCGANGenerator(nn.Module):
+class PixelCGAN(nn.Module):
     """
-    Conditional PixelGAN Generator: Takes condition image + noise/source.
-    Expects input x to be a 2-channel tensor [Source, Condition].
+    Conditional PixelGAN. 
+    Discriminator concatenates input wave-field (32 channels) with image (1 channel).
     """
-    def __init__(self, in_channels=2, out_channels=1, features=64):
-        super(PixelCGANGenerator, self).__init__()
-        self.gen = PixelGANGenerator(in_channels, out_channels, features)
+    def __init__(self, n_sensors=32, out_channels=1):
+        super().__init__()
+        self.generator = PixelDL(in_channels=n_sensors, out_channels=out_channels)
+        # Discriminator takes [Image(1) + Input(32)] = 33 channels
+        self.discriminator = PatchGANDiscriminator(in_channels=out_channels + n_sensors)
 
     def forward(self, x):
-        # Expecting x to already be concatenated [Input, Condition] 
-        # or just a multi-channel input for the conditional task.
-        return self.gen(x)
-
-class PixelCGANDiscriminator(nn.Module):
-    """
-    Conditional PixelGAN Discriminator: Discriminates based on image + condition.
-    Expects input x to be a 2-channel tensor [Image, Condition].
-    """
-    def __init__(self, in_channels=2, features=[64, 128, 256, 512]):
-        super(PixelCGANDiscriminator, self).__init__()
-        self.disc = PixelGANDiscriminator(in_channels, features)
-
-    def forward(self, x):
-        return self.disc(x)
-
-if __name__ == "__main__":
-    # Simple test
-    gen = PixelGANGenerator()
-    disc = PixelGANDiscriminator()
-    x = torch.randn(1, 1, 128, 128)
-    fake = gen(x)
-    pred = disc(fake)
-    print(f"Generator output shape: {fake.shape}")
-    print(f"Discriminator output shape: {pred.shape}")
+        return self.generator(x)

@@ -41,7 +41,7 @@
 }
 
 body {
-  background-color: var(--background);
+  background-color: transparent;
   color: var(--foreground);
   font-family: var(--font-sans);
 }

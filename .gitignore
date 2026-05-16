@@ -1,13 +1,25 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.log
-scratch/
-.gemini/
-*.pyc
-.DS_Store
-node_modules/
-dist/
-build/
+*.py[cod]
+*$py.class
+
+# Data & Large Files
+data/*.h5
+data/*.zip
+data/temp/
+saved_models/*.pth
+
+# Environment
 .env
-.venv/
-env/
 venv/
+env/
+.venv/
+
+# Frontend
+node_modules/
+.next/
+out/
+build/
+dist/
+.DS_Store
+*.log

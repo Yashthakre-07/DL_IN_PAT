@@ -5,7 +5,6 @@ import sys
 import traceback
 from datetime import datetime
 
-# Add the project root so we can import models and model_manager
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../'))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -14,169 +13,137 @@ SAVED_MODELS_DIR = os.path.join(PROJECT_ROOT, "saved_models")
 from models.paqnet import PhotoacousticQualityNet
 from models.iqdcnn import IQDCNN
 from models.efficientnet_iqa import EfficientNetIQA
-from models.unet_fdunet import UNet, FDUNet, PixelDL
+from models.unet_fdunet import UNet, FDUNet, PixelDL, YNet, FDYNet
 from models.pixel_gan import PixelGANGenerator, PixelCGANGenerator
 
 def _create_model(model_name: str):
-    """Create a fresh model architecture (no weights) for training from scratch."""
     name = model_name.lower()
-    if "paqnet" in name:
-        return PhotoacousticQualityNet()
-    elif "iqdcnn" in name:
-        return IQDCNN()
-    elif "efficientnet" in name:
-        return EfficientNetIQA()
-    elif "unet" == name:
-        return UNet()
-    elif "fdunet" == name:
-        return FDUNet()
-    elif "pixeldl" == name:
-        return PixelDL()
-    elif "pixelgan" == name:
-        return PixelGANGenerator()
-    elif "pixelcgan" == name:
-        return PixelCGANGenerator()
-    elif "resnet" in name:
-        # Fallback to PAQNet for resnet selection
-        return PhotoacousticQualityNet()
+    if "paqnet" in name: return PhotoacousticQualityNet()
+    elif "iqdcnn" in name: return IQDCNN()
+    elif "efficientnet" in name: return EfficientNetIQA()
+    elif "unet" == name: return UNet()
+    elif "fdunet" == name: return FDUNet()
+    elif "pixeldl" == name: return PixelDL()
+    elif "pixelgan" == name: return PixelGANGenerator()
+    elif "pixelcgan" == name: return PixelCGANGenerator()
+    elif "ynet" == name: return YNet()
+    elif "fdynet" == name: return FDYNet()
     else:
-        raise ValueError(f"Unknown architecture: '{model_name}'. Supported: paqnet, iqdcnn, efficientnet, unet, fdunet, pixeldl, pixelgan, pixelcgan")
+        supported = "paqnet, iqdcnn, efficientnet, unet, fdunet, pixeldl, pixelgan, pixelcgan, ynet, fdynet"
+        raise ValueError(f"Unknown architecture: '{model_name}'. Supported: {supported}")
 
-
-def run_training(epochs, model_name, train_loader, val_loader, task_instance, dataset_name="unknown"):
+def run_training(epochs, model_name, train_loader, val_loader, task_instance, dataset_name="unknown", 
+                 lr=1e-4, optimizer_type="adam", loss_type="mse"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    is_dual = "ynet" in model_name.lower()
     
-    if task_instance:
-        task_instance.update_state(state='TRAINING', meta={
-            'message': f"Initializing Compute Device: {device.type.upper()}",
-            'device': str(device)
-        })
+    # Configure Loss Function
+    if loss_type.lower() == "mse":
+        criterion = nn.MSELoss()
+    elif loss_type.lower() == "l1":
+        criterion = nn.L1Loss()
+    elif loss_type.lower() == "huber":
+        criterion = nn.HuberLoss()
+    else:
+        criterion = nn.MSELoss()
 
-    # Create model architecture directly (no weight loading needed for training)
     try:
-        model = _create_model(model_name)
-        model = model.to(device)
-        
-        if task_instance:
-            task_instance.update_state(state='TRAINING', meta={
-                'message': f"Model Architecture '{model_name}' Initialized Successfully."
-            })
+        model = _create_model(model_name).to(device)
     except Exception as e:
-        error_msg = f"Failed to create model '{model_name}': {str(e)}"
-        if task_instance:
-            task_instance.update_state(state='FAILURE', meta={'message': error_msg, 'details': traceback.format_exc()})
-        raise RuntimeError(error_msg)
+        if task_instance: task_instance.update_state('FAILURE', {'message': str(e)})
+        raise RuntimeError(e)
     
-    # Huber Loss was specifically used in the paper for robustness
-    criterion = nn.HuberLoss() 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    # Configure Optimizer
+    if optimizer_type.lower() == "adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    elif optimizer_type.lower() == "sgd":
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    elif optimizer_type.lower() == "rmsprop":
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=lr)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     
     best_val_loss = float('inf')
-    
-    # Ensure saved_models directory exists
     os.makedirs(SAVED_MODELS_DIR, exist_ok=True)
     
     for epoch in range(epochs):
         model.train()
         train_loss = 0
         
-        if task_instance:
-            task_instance.update_state(state='TRAINING', meta={
-                'message': f"Epoch {epoch + 1}/{epochs}: Training Phase Started",
-                'epoch': epoch + 1
-            })
-
-        for i, (images, labels) in enumerate(train_loader):
+        for i, (inputs, labels) in enumerate(train_loader):
             try:
-                images, labels = images.to(device), labels.to(device)
-                optimizer.zero_grad()
-                outputs = model(images)
-                loss = criterion(outputs.squeeze(), labels.squeeze())
+                if is_dual:
+                    img, sig = inputs
+                    img, sig, labels = img.to(device), sig.to(device), labels.to(device)
+                    optimizer.zero_grad()
+                    outputs = model(img, sig)
+                else:
+                    images, labels = inputs.to(device), labels.to(device)
+                    optimizer.zero_grad()
+                    outputs = model(images)
+                
+                # Dynamic shape handling
+                if outputs.shape != labels.shape:
+                    if outputs.numel() == labels.numel():
+                        loss = criterion(outputs.view(-1), labels.view(-1))
+                    else:
+                        loss = criterion(outputs.mean(dim=(1,2,3)), labels)
+                else:
+                    loss = criterion(outputs, labels)
+                    
                 loss.backward()
                 optimizer.step()
                 train_loss += loss.item()
                 
-                # Update status every 10 batches if dataset is large
                 if i % 10 == 0 and task_instance:
-                    task_instance.update_state(state='TRAINING', meta={
-                        'message': f"Epoch {epoch + 1}: Processing Batch {i+1}/{len(train_loader)}",
+                    task_instance.update_state('TRAINING', {
+                        'message': f"Epoch {epoch + 1}: Batch {i+1}/{len(train_loader)} | Loss: {loss.item():.4f}",
                         'loss': train_loss / (i + 1)
                     })
             except Exception as e:
-                error_msg = f"Batch Processing Error (Epoch {epoch+1}, Batch {i+1}): {str(e)}"
-                if task_instance:
-                    task_instance.update_state(state='FAILURE', meta={'message': error_msg, 'details': traceback.format_exc()})
-                raise RuntimeError(error_msg)
+                if task_instance: task_instance.update_state('FAILURE', {'message': str(e)})
+                raise RuntimeError(e)
             
         train_loss /= len(train_loader)
-        
-        # Validation
         model.eval()
         val_loss = 0
-        if task_instance:
-            task_instance.update_state(state='TRAINING', meta={
-                'message': f"Epoch {epoch + 1}/{epochs}: Validation Phase Started",
-                'loss': train_loss
-            })
-
         with torch.no_grad():
-            for images, labels in val_loader:
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                loss = criterion(outputs.squeeze(), labels.squeeze())
+            for inputs, labels in val_loader:
+                if is_dual:
+                    img, sig = inputs
+                    img, sig, labels = img.to(device), sig.to(device), labels.to(device)
+                    outputs = model(img, sig)
+                else:
+                    images, labels = inputs.to(device), labels.to(device)
+                    outputs = model(images)
+                
+                if outputs.shape != labels.shape:
+                    if outputs.numel() == labels.numel():
+                        loss = criterion(outputs.view(-1), labels.view(-1))
+                    else:
+                        loss = criterion(outputs.mean(dim=(1,2,3)), labels)
+                else:
+                    loss = criterion(outputs, labels)
                 val_loss += loss.item()
                 
         val_loss /= len(val_loader)
         
-        # Save best checkpoint
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            # Use a consistent timestamp for this training run's "best" file
             if not hasattr(run_training, "_run_date"):
                 run_training._run_date = datetime.now().strftime("%Y-%m-%d")
-            
             save_path = os.path.join(SAVED_MODELS_DIR, f"{model_name}_{dataset_name}_{run_training._run_date}.pth")
             torch.save(model.state_dict(), save_path)
-            if task_instance:
-                task_instance.update_state(state='TRAINING', meta={
-                    'message': f"New Best Model Saved (Val Loss: {val_loss:.6f})",
-                    'best_val_loss': best_val_loss
-                })
             
-        # Update task state for frontend WebSocket streaming
         if task_instance:
-            task_instance.update_state(state='TRAINING', meta={
-                'message': f"Epoch {epoch + 1} Complete. Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}",
+            task_instance.update_state('TRAINING', {
+                'message': f"Epoch {epoch + 1} Complete. Val Loss: {val_loss:.6f}",
                 'epoch': epoch + 1,
                 'loss': train_loss,
                 'val_loss': val_loss,
                 'best_val_loss': best_val_loss
             })
             
-    # Automated Registration via model_manager
-    try:
-        import model_manager
-        
-        if task_instance:
-            task_instance.update_state(state='TRAINING', meta={'message': "Finalizing: Registering Model Weights..."})
-
-        model_manager.save_model(
-            model=model,
-            model_name=model_name,
-            architecture_type=model_name,
-            dataset_name=dataset_name,
-            metrics_achieved={"best_val_huber": best_val_loss}
-        )
-    except Exception as e:
-        print(f"Registration Warning: {str(e)}")
-        if task_instance:
-            task_instance.update_state(state='TRAINING', meta={'message': f"Warning: Model registration skipped: {str(e)}"})
-            
-    if hasattr(run_training, "_run_date"):
-        final_model_name = f"{model_name}_{dataset_name}_{run_training._run_date}.pth"
-        delattr(run_training, "_run_date")
-    else:
-        # Fallback if no best model was saved (rare)
-        final_model_name = f"{model_name}_{datetime.now().strftime('%Y-%m-%d')}.pth"
-
+    final_model_name = f"{model_name}_{dataset_name}_{run_training._run_date}.pth" if hasattr(run_training, "_run_date") else "model.pth"
+    if hasattr(run_training, "_run_date"): delattr(run_training, "_run_date")
     return {"status": "Complete", "best_val": best_val_loss, "model_path": final_model_name}
