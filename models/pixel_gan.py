@@ -76,3 +76,7 @@ class PixelCGAN(nn.Module):
 
     def forward(self, x):
         return self.generator(x)
+
+# Aliases for compatibility with training and inference services
+PixelGANGenerator = PixelGAN
+PixelCGANGenerator = PixelCGAN
